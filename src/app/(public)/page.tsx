@@ -205,14 +205,21 @@ function HeroSection({ banners }: { banners: Banner[] }) {
 // STAR FIELD — Partículas decorativas
 // ─────────────────────────────────────────
 
+// Pseudo-random determinístico: mesmo output no server e no client
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed + 1) * 10000;
+  return x - Math.floor(x);
+}
+
 function StarField() {
   const stars = Array.from({ length: 60 }, (_, i) => ({
     id: i,
-    top: `${Math.random() * 100}%`,
-    left: `${Math.random() * 100}%`,
-    size: Math.random() * 2 + 1,
-    delay: `${Math.random() * 4}s`,
-    duration: `${Math.random() * 3 + 2}s`,
+    top: `${seededRandom(i * 5 + 0) * 100}%`,
+    left: `${seededRandom(i * 5 + 1) * 100}%`,
+    size: seededRandom(i * 5 + 2) * 2 + 1,
+    delay: `${seededRandom(i * 5 + 3) * 4}s`,
+    duration: `${seededRandom(i * 5 + 4) * 3 + 2}s`,
+    opacity: seededRandom(i * 5 + 5) * 0.4 + 0.1,
   }));
 
   return (
@@ -226,7 +233,7 @@ function StarField() {
             left: star.left,
             width: star.size,
             height: star.size,
-            opacity: Math.random() * 0.4 + 0.1,
+            opacity: star.opacity,
             animationDelay: star.delay,
             animationDuration: star.duration,
           }}

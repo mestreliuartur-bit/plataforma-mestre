@@ -52,7 +52,20 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // scrollbar-hide utility para o carrossel Netflix
+    function ({ addUtilities }: { addUtilities: (utils: Record<string, Record<string, string>>) => void }) {
+      addUtilities({
+        ".scrollbar-hide": {
+          "-ms-overflow-style": "none",
+          "scrollbar-width": "none",
+        },
+        ".scrollbar-hide::-webkit-scrollbar": {
+          display: "none",
+        },
+      });
+    },
+  ],
 };
 
 export default config;
