@@ -49,7 +49,7 @@ export const mockEvents: Event[] = [
     isPublished: true,
     eventDate: "2026-05-15T20:00:00.000Z",
     location: "São Paulo - SP",
-    createdAt: new Date().toISOString(),
+    createdAt: "2026-01-01T00:00:00.000Z",
   },
   {
     id: "2",
@@ -64,7 +64,7 @@ export const mockEvents: Event[] = [
     isPublished: true,
     eventDate: "2026-04-30T21:00:00.000Z",
     location: "São Paulo - SP",
-    createdAt: new Date().toISOString(),
+    createdAt: "2026-01-01T00:00:00.000Z",
   },
   {
     id: "3",
@@ -77,6 +77,6 @@ export const mockEvents: Event[] = [
     type: "DISTANCIA",
     isActive: true,
     isPublished: true,
-    createdAt: new Date().toISOString(),
+    createdAt: "2026-01-01T00:00:00.000Z",
   },
 ];
