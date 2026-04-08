@@ -1,0 +1,201 @@
+// Prisma Schema — Mestre Liu Artur Platform
+// Banco de dados: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum EventType {
+  PRESENCIAL
+  DISTANCIA
+}
+
+enum PurchaseStatus {
+  PENDING   // Aguardando pagamento
+  CONFIRMED // Pagamento confirmado
+  CANCELLED // Cancelado/reembolsado
+}
+
+enum ContentType {
+  VIDEO
+  TEXT
+  PDF
+  AUDIO
+}
+
+// ─────────────────────────────────────────
+// USER
+// ─────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?   // null quando OAuth (Google, etc.)
+  image         String?
+  phone         String?
+  birthDate     DateTime?
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relações
+  accounts  Account[]
+  sessions  Session[]
+  purchases Purchase[]
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────
+// AUTH (NextAuth.js / Auth.js)
+// ─────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─────────────────────────────────────────
+// EVENT (Eventos Esotéricos)
+// ─────────────────────────────────────────
+
+model Event {
+  id          String    @id @default(cuid())
+  slug        String    @unique // URL amigável: "evento-prosperidade-abril"
+  title       String
+  description String    @db.Text
+  price       Decimal   @db.Decimal(10, 2)
+  coverImage  String    // URL da imagem de capa
+  type        EventType
+  isActive    Boolean   @default(true)
+  isPublished Boolean   @default(false)
+  maxSlots    Int?      // null = ilimitado
+  eventDate   DateTime? // data do evento (se presencial)
+  location    String?   // endereço (se presencial)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relações
+  purchases Purchase[]
+  banners   Banner[]
+  contents  Content[]
+
+  @@map("events")
+}
+
+// ─────────────────────────────────────────
+// PURCHASE / TICKET
+// ─────────────────────────────────────────
+
+model Purchase {
+  id              String         @id @default(cuid())
+  userId          String
+  eventId         String
+  status          PurchaseStatus @default(PENDING)
+  pricePaid       Decimal        @db.Decimal(10, 2) // preço no momento da compra
+  paymentId       String?        // ID do gateway (Stripe, MP, etc.)
+  paymentProvider String?        // "stripe" | "mercadopago"
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
+
+  // Um usuário não compra o mesmo evento duas vezes
+  @@unique([userId, eventId])
+  @@map("purchases")
+}
+
+// ─────────────────────────────────────────
+// BANNER (Homepage — gerenciado pelo Admin)
+// ─────────────────────────────────────────
+
+model Banner {
+  id          String   @id @default(cuid())
+  title       String
+  subtitle    String?
+  imageUrl    String
+  ctaLabel    String   @default("Conhecer Ritual") // texto do botão
+  ctaUrl      String   // pode apontar para /eventos/[slug] ou URL externa
+  eventId     String?  // opcional: vincula direto a um evento
+  isActive    Boolean  @default(true)
+  order       Int      @default(0) // ordenação dos banners no carrossel
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  event Event? @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  @@map("banners")
+}
+
+// ─────────────────────────────────────────
+// CONTENT (Conteúdo exclusivo para membros)
+// ─────────────────────────────────────────
+
+model Content {
+  id          String      @id @default(cuid())
+  title       String
+  description String?     @db.Text
+  type        ContentType
+  url         String      // URL do vídeo, PDF, áudio, etc.
+  eventId     String?     // conteúdo pode ser vinculado a um evento
+  isPublished Boolean     @default(false)
+  order       Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  event Event? @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  @@map("contents")
+}
