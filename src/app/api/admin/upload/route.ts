@@ -1,15 +1,22 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { generateUploadSignature } from "@/lib/cloudinary";
+import { cloudinary } from "@/lib/cloudinary";
 
-// Retorna uma assinatura para upload direto e seguro do browser para o Cloudinary
-// O browser envia a imagem diretamente ao Cloudinary — nunca passa pelo servidor Next.js
-export async function GET() {
+// POST — assina os parâmetros enviados pelo CldUploadWidget (signed upload)
+// O browser envia a imagem diretamente ao Cloudinary, nunca passa pelo servidor.
+export async function POST(req: NextRequest) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") {
+  if (!session?.user || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
-  const signature = generateUploadSignature();
-  return NextResponse.json(signature);
+  const body = await req.json();
+  const paramsToSign: Record<string, string | number> = body.paramsToSign ?? {};
+
+  const signature = cloudinary.utils.api_sign_request(
+    paramsToSign,
+    process.env.CLOUDINARY_API_SECRET!
+  );
+
+  return NextResponse.json({ signature, timestamp: paramsToSign.timestamp });
 }

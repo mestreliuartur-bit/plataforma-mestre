@@ -17,16 +17,36 @@ export function CloudinaryUpload({ value, onChange }: CloudinaryUploadProps) {
   return (
     <div className="space-y-3">
       <CldUploadWidget
-        uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET ?? "mestre_liu_artur"}
+        // ── Upload assinado: não precisa de preset, mais seguro ──
+        signatureEndpoint="/api/admin/upload"
         options={{
+          // Identidade do cloud (sem o secret — seguro expor)
+          cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+          apiKey: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
+
+          // Pasta destino
           folder: "mestre-liu-artur/events",
+
+          // Formato e tamanho
+          clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
+          maxFileSize: 20_000_000, // 20MB — o Cloudinary comprime na nuvem
+
+          // ── Compressão automática antes do upload ──
+          // Redimensiona para no máximo 1200px de largura/altura
+          maxImageWidth: 1200,
+          maxImageHeight: 1200,
+          // Qualidade: auto (Cloudinary escolhe o melhor balance)
+
+          // Crop forçado em 9:16
           cropping: true,
-          croppingAspectRatio: 0.5625, // 9:16
+          croppingAspectRatio: 0.5625, // 9 / 16
           showSkipCropButton: false,
+          croppingCoordinatesMode: "face",
+
           multiple: false,
           maxFiles: 1,
-          clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
-          maxFileSize: 8000000, // 8MB
+
+          // Tema escuro do widget
           styles: {
             palette: {
               window: "#0a0a0f",
@@ -46,25 +66,32 @@ export function CloudinaryUpload({ value, onChange }: CloudinaryUploadProps) {
           },
         }}
         onSuccess={(result) => {
-          if (result.event === "success" && result.info && typeof result.info === "object") {
+          if (
+            result.event === "success" &&
+            result.info &&
+            typeof result.info === "object"
+          ) {
             const info = result.info as { public_id: string };
             onChange(info.public_id);
           }
         }}
+        onError={(error) => {
+          console.error("[Cloudinary Upload Error]", error);
+        }}
       >
         {({ open }) => (
-          <div className="flex gap-4">
-            {/* Preview 9:16 */}
+          <div className="flex gap-5">
+            {/* ── Preview 9:16 ── */}
             <div
-              className="relative flex-shrink-0 overflow-hidden rounded-xl border border-white/10 bg-gray-900"
-              style={{ width: 112, height: 200 }} // 9:16 @ 112px wide
+              className="relative flex-shrink-0 cursor-pointer overflow-hidden rounded-xl border border-white/10 bg-gray-900"
+              style={{ width: 112, height: 200 }}
               onMouseEnter={() => setIsHovering(true)}
               onMouseLeave={() => setIsHovering(false)}
+              onClick={() => !hasImage && open()}
             >
               {hasImage ? (
                 <>
                   {isExternalUrl ? (
-                    // Seed data com URL externa — next/image simples
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={value}
@@ -84,12 +111,13 @@ export function CloudinaryUpload({ value, onChange }: CloudinaryUploadProps) {
                       className="object-cover"
                     />
                   )}
-                  {/* Overlay ao hover */}
+
+                  {/* Overlay "Trocar" ao hover */}
                   {isHovering && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-[2px]">
                       <button
                         type="button"
-                        onClick={() => open()}
+                        onClick={(e) => { e.stopPropagation(); open(); }}
                         className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white"
                       >
                         Trocar
@@ -103,12 +131,12 @@ export function CloudinaryUpload({ value, onChange }: CloudinaryUploadProps) {
                   <svg className="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                   </svg>
-                  <span className="text-[10px] leading-tight text-gray-600">9:16</span>
+                  <span className="text-[10px] leading-tight text-gray-600">Clique para<br/>fazer upload</span>
                 </div>
               )}
             </div>
 
-            {/* Botão + info */}
+            {/* ── Botão + informações ── */}
             <div className="flex flex-col justify-center gap-3">
               <button
                 type="button"
@@ -120,22 +148,29 @@ export function CloudinaryUpload({ value, onChange }: CloudinaryUploadProps) {
                 </svg>
                 {hasImage ? "Trocar imagem" : "Upload de imagem"}
               </button>
-              <div className="space-y-1">
+
+              <div className="space-y-1.5">
                 <p className="text-xs text-gray-500">
-                  Proporção <strong className="text-gray-400">9:16</strong> (pôster vertical)
+                  Proporção <strong className="text-gray-300">9:16</strong> — pôster vertical
                 </p>
-                <p className="text-xs text-gray-600">JPG, PNG, WebP · Máx. 8MB</p>
+                <p className="text-xs text-gray-600">
+                  JPG, PNG, WebP · até 20MB
+                </p>
+                <p className="text-xs text-gray-600">
+                  Imagens grandes são otimizadas automaticamente
+                </p>
                 {hasImage && !isExternalUrl && (
-                  <p className="truncate text-[10px] text-emerald-400/70">
-                    ✓ {value.split("/").pop()}
+                  <p className="text-[11px] text-emerald-400/80">
+                    ✓ Upload realizado
                   </p>
                 )}
               </div>
+
               {hasImage && (
                 <button
                   type="button"
                   onClick={() => onChange("")}
-                  className="text-left text-xs text-red-400/60 hover:text-red-400"
+                  className="text-left text-xs text-red-400/60 transition-colors hover:text-red-400"
                 >
                   Remover imagem
                 </button>
