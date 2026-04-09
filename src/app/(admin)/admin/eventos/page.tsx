@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { CldImage } from "next-cloudinary";
+import Image from "next/image";
 import { db } from "@/lib/db";
-import { isCloudinaryPublicId } from "@/lib/cloudinary";
+import { cloudinaryUrl } from "@/lib/cloudinary";
 
 interface SearchParams {
   type?: string;
@@ -153,27 +153,14 @@ export default async function AdminEventosPage({ searchParams }: Props) {
                         className="relative overflow-hidden rounded-lg bg-gray-900 border border-white/10"
                         style={{ width: 44, height: 78 }}
                       >
-                        {event.coverImage ? (
-                          isCloudinaryPublicId(event.coverImage) ? (
-                            <CldImage
-                              src={event.coverImage}
-                              alt={event.title}
-                              fill
-                              sizes="44px"
-                              crop="fill"
-                              gravity="auto"
-                              quality="auto"
-                              format="auto"
-                              className="object-cover"
-                            />
-                          ) : (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={event.coverImage}
-                              alt={event.title}
-                              className="h-full w-full object-cover"
-                            />
-                          )
+                        {cloudinaryUrl(event.coverImage, "c_fill,ar_9:16,w_88,q_auto,f_auto") ? (
+                          <Image
+                            src={cloudinaryUrl(event.coverImage, "c_fill,ar_9:16,w_88,q_auto,f_auto")!}
+                            alt={event.title}
+                            fill
+                            sizes="44px"
+                            className="object-cover"
+                          />
                         ) : (
                           <div className="flex h-full items-center justify-center">
                             <svg viewBox="0 0 100 100" className="h-5 w-5 text-gray-700" fill="currentColor">

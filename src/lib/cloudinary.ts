@@ -28,3 +28,15 @@ export function isCloudinaryPublicId(src: string | null | undefined): boolean {
   if (!src) return false;
   return !src.startsWith("http");
 }
+
+// Constrói URL completa do Cloudinary a partir de um public_id
+// Pode ser usada em Server Components (sem CldImage)
+export function cloudinaryUrl(
+  publicId: string | null | undefined,
+  transformation = "c_fill,q_auto,f_auto"
+): string | null {
+  if (!publicId || publicId.startsWith("http")) return publicId ?? null;
+  const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  if (!cloud) return null;
+  return `https://res.cloudinary.com/${cloud}/image/upload/${transformation}/${publicId}`;
+}
