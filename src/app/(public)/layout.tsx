@@ -42,7 +42,7 @@ function Navbar() {
             Entrar
           </Link>
           <Link
-            href="/cadastro"
+            href="/register"
             className="rounded-full bg-gradient-to-r from-amber-500 to-amber-400 px-3 py-1.5 text-xs font-semibold text-black transition-all hover:shadow-lg hover:shadow-amber-900/30 sm:px-5 sm:py-2 sm:text-sm"
           >
             <span className="sm:hidden">Começar</span>
