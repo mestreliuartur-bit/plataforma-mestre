@@ -20,11 +20,14 @@ export default async function EditarEventoPage({ params }: Props) {
     title: event.title,
     slug: event.slug,
     description: event.description,
-    price: String(event.price),
+    price: event.price ? String(event.price) : undefined,
     coverImage: event.coverImage ?? "",
     type: event.type,
     isActive: event.isActive,
     isPublished: event.isPublished,
+    isWhatsappLead: event.isWhatsappLead,
+    whatsappNumber: event.whatsappNumber ?? undefined,
+    whatsappMessage: event.whatsappMessage ?? undefined,
     maxSlots: event.maxSlots ? String(event.maxSlots) : undefined,
     eventDate: event.eventDate
       ? event.eventDate.toISOString().slice(0, 16)

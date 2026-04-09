@@ -10,15 +10,20 @@ export async function createEvent(formData: FormData) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
 
+  const isWhatsappLead = formData.get("isWhatsappLead") === "true";
+
   const raw = {
     title: formData.get("title") as string,
     slug: (formData.get("slug") as string) || slugify(formData.get("title") as string),
     description: formData.get("description") as string,
-    price: formData.get("price") as string,
+    price: (formData.get("price") as string) || undefined,
     coverImage: (formData.get("coverImage") as string) || "",
     type: formData.get("type") as string,
     isActive: formData.get("isActive") === "true",
     isPublished: formData.get("isPublished") === "true",
+    isWhatsappLead,
+    whatsappNumber: (formData.get("whatsappNumber") as string) || undefined,
+    whatsappMessage: (formData.get("whatsappMessage") as string) || undefined,
     maxSlots: (formData.get("maxSlots") as string) || undefined,
     eventDate: (formData.get("eventDate") as string) || undefined,
     location: (formData.get("location") as string) || undefined,
@@ -27,7 +32,8 @@ export async function createEvent(formData: FormData) {
   const parsed = eventSchema.safeParse(raw);
   if (!parsed.success) {
     const errors = parsed.error.flatten().fieldErrors;
-    return { error: Object.values(errors).flat()[0] ?? "Dados inválidos" };
+    const formErrors = parsed.error.flatten().formErrors;
+    return { error: formErrors[0] ?? Object.values(errors).flat()[0] ?? "Dados inválidos" };
   }
 
   const data = parsed.data;
@@ -38,11 +44,14 @@ export async function createEvent(formData: FormData) {
         title: data.title,
         slug: data.slug,
         description: data.description,
-        price: parseFloat(data.price),
+        price: data.price ? parseFloat(data.price) : null,
         coverImage: data.coverImage || "",
         type: data.type as "PRESENCIAL" | "DISTANCIA",
         isActive: data.isActive,
         isPublished: data.isPublished,
+        isWhatsappLead: data.isWhatsappLead,
+        whatsappNumber: data.whatsappNumber || null,
+        whatsappMessage: data.whatsappMessage || null,
         maxSlots: data.maxSlots ? parseInt(data.maxSlots) : null,
         eventDate: data.eventDate ? new Date(data.eventDate) : null,
         location: data.location || null,
@@ -63,15 +72,20 @@ export async function updateEvent(id: string, formData: FormData) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
 
+  const isWhatsappLead = formData.get("isWhatsappLead") === "true";
+
   const raw = {
     title: formData.get("title") as string,
     slug: formData.get("slug") as string,
     description: formData.get("description") as string,
-    price: formData.get("price") as string,
+    price: (formData.get("price") as string) || undefined,
     coverImage: (formData.get("coverImage") as string) || "",
     type: formData.get("type") as string,
     isActive: formData.get("isActive") === "true",
     isPublished: formData.get("isPublished") === "true",
+    isWhatsappLead,
+    whatsappNumber: (formData.get("whatsappNumber") as string) || undefined,
+    whatsappMessage: (formData.get("whatsappMessage") as string) || undefined,
     maxSlots: (formData.get("maxSlots") as string) || undefined,
     eventDate: (formData.get("eventDate") as string) || undefined,
     location: (formData.get("location") as string) || undefined,
@@ -80,7 +94,8 @@ export async function updateEvent(id: string, formData: FormData) {
   const parsed = eventSchema.safeParse(raw);
   if (!parsed.success) {
     const errors = parsed.error.flatten().fieldErrors;
-    return { error: Object.values(errors).flat()[0] ?? "Dados inválidos" };
+    const formErrors = parsed.error.flatten().formErrors;
+    return { error: formErrors[0] ?? Object.values(errors).flat()[0] ?? "Dados inválidos" };
   }
 
   const data = parsed.data;
@@ -92,11 +107,14 @@ export async function updateEvent(id: string, formData: FormData) {
         title: data.title,
         slug: data.slug,
         description: data.description,
-        price: parseFloat(data.price),
+        price: data.price ? parseFloat(data.price) : null,
         coverImage: data.coverImage || "",
         type: data.type as "PRESENCIAL" | "DISTANCIA",
         isActive: data.isActive,
         isPublished: data.isPublished,
+        isWhatsappLead: data.isWhatsappLead,
+        whatsappNumber: data.whatsappNumber || null,
+        whatsappMessage: data.whatsappMessage || null,
         maxSlots: data.maxSlots ? parseInt(data.maxSlots) : null,
         eventDate: data.eventDate ? new Date(data.eventDate) : null,
         location: data.location || null,

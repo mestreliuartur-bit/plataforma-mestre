@@ -16,19 +16,22 @@ export const eventSchema = z.object({
     .string()
     .min(10, "Descrição deve ter pelo menos 10 caracteres"),
 
+  // Opcional quando isWhatsappLead = true
   price: z
     .string()
-    .min(1, "Preço é obrigatório")
-    .refine((v) => !isNaN(parseFloat(v)) && parseFloat(v) >= 0, "Preço inválido"),
+    .optional()
+    .refine((v) => !v || (!isNaN(parseFloat(v)) && parseFloat(v) >= 0), "Preço inválido"),
 
-  // Aceita public_id do Cloudinary (ex: "mestre-liu-artur/events/abc123")
-  // ou URL completa (ex: "https://...") ou vazio
   coverImage: z.string(),
 
   type: z.enum(["PRESENCIAL", "DISTANCIA"]),
 
   isActive: z.boolean().default(true),
   isPublished: z.boolean().default(false),
+  isWhatsappLead: z.boolean().default(false),
+
+  whatsappNumber: z.string().max(20).optional(),
+  whatsappMessage: z.string().max(1000).optional(),
 
   maxSlots: z
     .string()
@@ -37,7 +40,13 @@ export const eventSchema = z.object({
 
   eventDate: z.string().optional(),
   location: z.string().max(300, "Localização muito longa").optional(),
-});
+}).refine(
+  (d) => d.isWhatsappLead || (d.price !== undefined && d.price !== ""),
+  { message: "Preço é obrigatório para eventos de venda direta", path: ["price"] }
+).refine(
+  (d) => !d.isWhatsappLead || (d.whatsappNumber && d.whatsappNumber.length >= 10),
+  { message: "Número do WhatsApp é obrigatório para eventos via WhatsApp", path: ["whatsappNumber"] }
+);
 
 export type EventInput = z.infer<typeof eventSchema>;
 

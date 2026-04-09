@@ -9,11 +9,14 @@ export interface CarouselEvent {
   slug: string;
   title: string;
   description: string;
-  price: number | string;
+  price: number | string | null;
   coverImage: string | null;
   type: "PRESENCIAL" | "DISTANCIA";
   eventDate?: Date | string | null;
   maxSlots?: number | null;
+  isWhatsappLead?: boolean;
+  whatsappNumber?: string | null;
+  whatsappMessage?: string | null;
 }
 
 interface EventCarouselProps {
@@ -162,6 +165,9 @@ export function EventCarousel({
                 eventDate={event.eventDate}
                 maxSlots={event.maxSlots}
                 isPurchased={purchasedIds.has(event.id)}
+                isWhatsappLead={event.isWhatsappLead}
+                whatsappNumber={event.whatsappNumber}
+                whatsappMessage={event.whatsappMessage}
               />
             </div>
           ))}

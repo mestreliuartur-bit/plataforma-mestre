@@ -111,20 +111,23 @@ model VerificationToken {
 // ─────────────────────────────────────────
 
 model Event {
-  id          String    @id @default(cuid())
-  slug        String    @unique // URL amigável: "evento-prosperidade-abril"
-  title       String
-  description String    @db.Text
-  price       Decimal   @db.Decimal(10, 2)
-  coverImage  String    // URL da imagem de capa
-  type        EventType
-  isActive    Boolean   @default(true)
-  isPublished Boolean   @default(false)
-  maxSlots    Int?      // null = ilimitado
-  eventDate   DateTime? // data do evento (se presencial)
-  location    String?   // endereço (se presencial)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id                String    @id @default(cuid())
+  slug              String    @unique // URL amigável: "evento-prosperidade-abril"
+  title             String
+  description       String    @db.Text
+  price             Decimal?  @db.Decimal(10, 2) // null quando isWhatsappLead = true
+  coverImage        String    // URL da imagem de capa
+  type              EventType
+  isActive          Boolean   @default(true)
+  isPublished       Boolean   @default(false)
+  isWhatsappLead    Boolean   @default(false)   // true = venda via WhatsApp
+  whatsappNumber    String?                      // ex: "5511910998013"
+  whatsappMessage   String?   @db.Text           // mensagem pré-definida
+  maxSlots          Int?      // null = ilimitado
+  eventDate         DateTime? // data do evento (se presencial)
+  location          String?   // endereço (se presencial)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   // Relações
   purchases Purchase[]
