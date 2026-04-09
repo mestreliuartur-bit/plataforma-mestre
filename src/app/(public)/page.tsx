@@ -2,10 +2,43 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { HeroSection } from "./_components/HeroSection";
 
-// Server Component — sem "use client", sem mock data, sem hydration issues
+// Server Component — sem "use client", sem hydration issues
+
+const MOCK_EVENTS = [
+  {
+    id: "m1", slug: "ritual-prosperidade-financeira", title: "Ritual de Prosperidade Financeira",
+    description: "Poderoso trabalho para abrir os caminhos da abundância e atrair riqueza material para sua vida.",
+    price: 297, type: "DISTANCIA" as const, coverImage: "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=800&h=450&fit=crop",
+  },
+  {
+    id: "m2", slug: "limpeza-espiritual-completa", title: "Limpeza Espiritual Completa",
+    description: "Descarrego profundo para remover energias negativas, quebrar amarrações e limpar seu campo energético.",
+    price: 197, type: "DISTANCIA" as const, coverImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=450&fit=crop",
+  },
+  {
+    id: "m3", slug: "trabalho-amor-harmonizacao", title: "Trabalho de Amor e Harmonização",
+    description: "Ritual de magias brancas para unir casais, restaurar laços e atrair o amor verdadeiro.",
+    price: 397, type: "DISTANCIA" as const, coverImage: "https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=800&h=450&fit=crop",
+  },
+  {
+    id: "m4", slug: "encontro-energia-vital-maio", title: "Encontro — Energia Vital",
+    description: "Workshop presencial intensivo: respiração, meditação profunda e alinhamento dos chakras.",
+    price: 497, type: "PRESENCIAL" as const, coverImage: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&h=450&fit=crop",
+  },
+  {
+    id: "m5", slug: "ritual-saude-cura", title: "Ritual de Saúde e Cura",
+    description: "Trabalho espiritual focado na recuperação da saúde física e mental com energias de cura ancestral.",
+    price: 347, type: "DISTANCIA" as const, coverImage: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&h=450&fit=crop",
+  },
+  {
+    id: "m6", slug: "gira-umbanda-presencial", title: "Gira de Umbanda Presencial",
+    description: "Noite especial de umbanda com o Mestre Liu Artur e seus guias. Consultas individuais durante a gira.",
+    price: 350, type: "PRESENCIAL" as const, coverImage: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=450&fit=crop",
+  },
+];
 
 export default async function HomePage() {
-  const [banners, events] = await Promise.all([
+  const [banners, dbEvents] = await Promise.all([
     db.banner.findMany({
       where: { isActive: true },
       orderBy: { order: "asc" },
@@ -16,6 +49,8 @@ export default async function HomePage() {
       take: 6,
     }),
   ]);
+
+  const events = dbEvents.length > 0 ? dbEvents : MOCK_EVENTS;
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
