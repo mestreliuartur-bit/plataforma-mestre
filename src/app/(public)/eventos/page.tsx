@@ -107,13 +107,18 @@ const MOCK_EVENTS: (CarouselEvent & { category: string })[] = [
 
 function toCarouselEvent(e: {
   id: string; slug: string; title: string; description: string;
-  price: { toString(): string } | number; coverImage: string | null;
+  price: { toString(): string } | number | null; coverImage: string | null;
   type: "PRESENCIAL" | "DISTANCIA"; eventDate?: Date | null; maxSlots?: number | null;
+  isWhatsappLead?: boolean; whatsappNumber?: string | null; whatsappMessage?: string | null;
 }): CarouselEvent {
   return {
     id: e.id, slug: e.slug, title: e.title, description: e.description,
-    price: Number(e.price), coverImage: e.coverImage,
-    type: e.type, eventDate: e.eventDate, maxSlots: e.maxSlots,
+    price: e.price !== null ? Number(e.price) : null,
+    coverImage: e.coverImage, type: e.type,
+    eventDate: e.eventDate, maxSlots: e.maxSlots,
+    isWhatsappLead: e.isWhatsappLead ?? false,
+    whatsappNumber: e.whatsappNumber,
+    whatsappMessage: e.whatsappMessage,
   };
 }
 
