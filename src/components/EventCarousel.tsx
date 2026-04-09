@@ -4,7 +4,7 @@ import { useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { EventCard } from "./EventCard";
 
-interface CarouselEvent {
+export interface CarouselEvent {
   id: string;
   slug: string;
   title: string;
@@ -12,7 +12,7 @@ interface CarouselEvent {
   price: number | string;
   coverImage: string | null;
   type: "PRESENCIAL" | "DISTANCIA";
-  eventDate?: Date | null;
+  eventDate?: Date | string | null;
   maxSlots?: number | null;
 }
 
@@ -22,10 +22,34 @@ interface EventCarouselProps {
   events: CarouselEvent[];
   purchasedIds?: Set<string>;
   viewAllHref?: string;
-  accentColor?: "amber" | "purple";
+  accentColor?: "amber" | "purple" | "blue" | "emerald";
+  bgColor?: string; // ex: "from-[#0a0a0f]"
 }
 
-const SCROLL_AMOUNT = 480;
+const SCROLL_AMOUNT = 560;
+
+const accentMap = {
+  amber: {
+    label: "text-amber-400/70",
+    arrow: "border-amber-400/30 text-amber-400 hover:border-amber-400/60 hover:bg-amber-400/10 disabled:opacity-20",
+    fade: "from-zinc-950",
+  },
+  purple: {
+    label: "text-purple-400/70",
+    arrow: "border-purple-400/30 text-purple-400 hover:border-purple-400/60 hover:bg-purple-400/10 disabled:opacity-20",
+    fade: "from-zinc-950",
+  },
+  blue: {
+    label: "text-blue-400/70",
+    arrow: "border-blue-400/30 text-blue-400 hover:border-blue-400/60 hover:bg-blue-400/10 disabled:opacity-20",
+    fade: "from-zinc-950",
+  },
+  emerald: {
+    label: "text-emerald-400/70",
+    arrow: "border-emerald-400/30 text-emerald-400 hover:border-emerald-400/60 hover:bg-emerald-400/10 disabled:opacity-20",
+    fade: "from-zinc-950",
+  },
+};
 
 export function EventCarousel({
   title,
@@ -34,10 +58,13 @@ export function EventCarousel({
   purchasedIds = new Set(),
   viewAllHref,
   accentColor = "amber",
+  bgColor = "from-zinc-950",
 }: EventCarouselProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const accent = accentMap[accentColor];
 
   const checkScroll = useCallback(() => {
     const el = rowRef.current;
@@ -56,36 +83,33 @@ export function EventCarousel({
 
   if (events.length === 0) return null;
 
-  const accentClasses = {
-    amber: { label: "text-amber-400/60", arrow: "border-amber-400/20 text-amber-400 hover:border-amber-400/50 hover:bg-amber-400/10" },
-    purple: { label: "text-purple-400/60", arrow: "border-purple-400/20 text-purple-400 hover:border-purple-400/50 hover:bg-purple-400/10" },
-  }[accentColor];
-
   return (
-    <section className="space-y-4">
-      {/* ── Cabeçalho da row ── */}
-      <div className="flex items-end justify-between">
+    <section className="space-y-3">
+      {/* Cabeçalho */}
+      <div className="flex items-end justify-between px-1">
         <div>
-          <p className={`text-xs font-semibold uppercase tracking-widest ${accentClasses.label}`}>
-            {subtitle}
-          </p>
+          {subtitle && (
+            <p className={`text-[10px] font-bold uppercase tracking-widest ${accent.label}`}>
+              {subtitle}
+            </p>
+          )}
           <h2 className="mt-0.5 font-serif text-xl font-bold text-white">{title}</h2>
         </div>
+
         <div className="flex items-center gap-2">
           {viewAllHref && (
             <Link
               href={viewAllHref}
-              className={`mr-2 text-xs font-medium transition-colors ${accentClasses.label} hover:text-white`}
+              className={`mr-1 text-xs font-medium transition-colors ${accent.label} hover:text-white`}
             >
               Ver todos →
             </Link>
           )}
-          {/* Setas */}
           <button
             onClick={() => scroll("left")}
             disabled={!canScrollLeft}
             aria-label="Anterior"
-            className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all disabled:opacity-20 ${accentClasses.arrow}`}
+            className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all ${accent.arrow}`}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -95,7 +119,7 @@ export function EventCarousel({
             onClick={() => scroll("right")}
             disabled={!canScrollRight}
             aria-label="Próximo"
-            className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all disabled:opacity-20 ${accentClasses.arrow}`}
+            className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all ${accent.arrow}`}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -104,25 +128,28 @@ export function EventCarousel({
         </div>
       </div>
 
-      {/* ── Row de cards ── */}
+      {/* Row de cards — overflow-visible para o efeito Netflix sair dos limites */}
       <div className="relative">
         {/* Fade esquerda */}
-        {canScrollLeft && (
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-[#0a0a0f] to-transparent" />
-        )}
+        <div
+          className={`pointer-events-none absolute inset-y-0 left-0 z-20 w-10 bg-gradient-to-r ${bgColor} to-transparent transition-opacity duration-300 ${
+            canScrollLeft ? "opacity-100" : "opacity-0"
+          }`}
+        />
         {/* Fade direita */}
-        {canScrollRight && (
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#0a0a0f] to-transparent" />
-        )}
+        <div
+          className={`pointer-events-none absolute inset-y-0 right-0 z-20 w-16 bg-gradient-to-l ${bgColor} to-transparent`}
+        />
 
         <div
           ref={rowRef}
           onScroll={checkScroll}
-          className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide"
+          /* overflow-y-visible deixa o overlay Netflix "sair" para baixo */
+          className="flex gap-3 overflow-x-auto overflow-y-visible pb-36 pt-4 scrollbar-hide"
           style={{ scrollSnapType: "x mandatory" }}
         >
           {events.map((event) => (
-            <div key={event.id} style={{ scrollSnapAlign: "start" }}>
+            <div key={event.id} className="flex-shrink-0" style={{ scrollSnapAlign: "start" }}>
               <EventCard
                 id={event.id}
                 slug={event.slug}
