@@ -113,7 +113,7 @@ export function HeroSection({ banners }: { banners: Banner[] }) {
               <span className="h-px w-8 bg-amber-400/60" />
             </div>
 
-            <h1 className={`font-serif text-5xl font-bold leading-tight text-white transition-all duration-500 delay-100 sm:text-6xl lg:text-7xl ${isTransitioning ? "translate-y-4 opacity-0" : "translate-y-0 opacity-100"}`}>
+            <h1 className={`font-serif text-4xl font-bold leading-tight text-white transition-all duration-500 delay-100 sm:text-5xl md:text-6xl lg:text-7xl ${isTransitioning ? "translate-y-4 opacity-0" : "translate-y-0 opacity-100"}`}>
               <span className="block">{banner.title}</span>
               <span className="mt-2 block bg-gradient-to-r from-amber-300 via-amber-400 to-amber-200 bg-clip-text text-transparent">
                 está te esperando
