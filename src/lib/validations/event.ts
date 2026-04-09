@@ -21,10 +21,9 @@ export const eventSchema = z.object({
     .min(1, "Preço é obrigatório")
     .refine((v) => !isNaN(parseFloat(v)) && parseFloat(v) >= 0, "Preço inválido"),
 
-  coverImage: z
-    .string()
-    .url("URL da imagem inválida")
-    .or(z.literal("")),
+  // Aceita public_id do Cloudinary (ex: "mestre-liu-artur/events/abc123")
+  // ou URL completa (ex: "https://...") ou vazio
+  coverImage: z.string(),
 
   type: z.enum(["PRESENCIAL", "DISTANCIA"]),
 
