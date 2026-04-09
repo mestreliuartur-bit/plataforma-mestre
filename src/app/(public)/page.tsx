@@ -2,6 +2,8 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { HeroSection } from "./_components/HeroSection";
 
+export const dynamic = "force-dynamic";
+
 // Server Component — sem "use client", sem hydration issues
 
 const MOCK_EVENTS = [
