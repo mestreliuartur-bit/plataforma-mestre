@@ -104,46 +104,68 @@ export function HeroSection({ banners }: { banners: Banner[] }) {
       {/* Conteúdo do Hero */}
       <div className="relative z-20 flex h-full items-center">
         <div className="mx-auto w-full max-w-7xl px-6 lg:px-12">
-          <div className="max-w-2xl">
-            <div className={`mb-6 inline-flex items-center gap-2 transition-all duration-500 ${isTransitioning ? "translate-y-4 opacity-0" : "translate-y-0 opacity-100"}`}>
-              <span className="h-px w-8 bg-amber-400/60" />
-              <span className="font-sans text-xs font-semibold uppercase tracking-[0.3em] text-amber-400/80">
-                Mestre Liu Artur
-              </span>
-              <span className="h-px w-8 bg-amber-400/60" />
+          <div className="grid items-center gap-10 lg:grid-cols-2">
+
+            {/* ── Coluna esquerda: texto ── */}
+            <div>
+              <div className={`mb-6 inline-flex items-center gap-2 transition-all duration-500 ${isTransitioning ? "translate-y-4 opacity-0" : "translate-y-0 opacity-100"}`}>
+                <span className="h-px w-8 bg-amber-400/60" />
+                <span className="font-sans text-xs font-semibold uppercase tracking-[0.3em] text-amber-400/80">
+                  Mestre Liu Artur
+                </span>
+                <span className="h-px w-8 bg-amber-400/60" />
+              </div>
+
+              <h1 className={`font-serif text-4xl font-bold leading-tight text-white transition-all duration-500 delay-100 sm:text-5xl lg:text-6xl ${isTransitioning ? "translate-y-4 opacity-0" : "translate-y-0 opacity-100"}`}>
+                <span className="block">{banner.title}</span>
+                <span className="mt-2 block bg-gradient-to-r from-amber-300 via-amber-400 to-amber-200 bg-clip-text text-transparent">
+                  está te esperando
+                </span>
+              </h1>
+
+              {banner.subtitle && (
+                <p className={`mt-6 text-lg leading-relaxed text-gray-300/80 transition-all duration-500 delay-200 ${isTransitioning ? "translate-y-4 opacity-0" : "translate-y-0 opacity-100"}`}>
+                  {banner.subtitle}
+                </p>
+              )}
+
+              <div className={`mt-10 flex flex-wrap items-center gap-4 transition-all duration-500 delay-300 ${isTransitioning ? "translate-y-4 opacity-0" : "translate-y-0 opacity-100"}`}>
+                <Link
+                  href={banner.ctaUrl}
+                  className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-amber-500 to-amber-400 px-8 py-4 font-semibold text-black shadow-lg shadow-amber-900/30 transition-all hover:shadow-amber-700/40 hover:shadow-xl active:scale-95"
+                >
+                  <span className="relative z-10">{banner.ctaLabel}</span>
+                  <svg className="relative z-10 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                  <div className="absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-700 group-hover:translate-x-full" />
+                </Link>
+                <Link
+                  href="#eventos"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-8 py-4 font-medium text-white/80 backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
+                >
+                  Ver todos os Rituais
+                </Link>
+              </div>
             </div>
 
-            <h1 className={`font-serif text-4xl font-bold leading-tight text-white transition-all duration-500 delay-100 sm:text-5xl md:text-6xl lg:text-7xl ${isTransitioning ? "translate-y-4 opacity-0" : "translate-y-0 opacity-100"}`}>
-              <span className="block">{banner.title}</span>
-              <span className="mt-2 block bg-gradient-to-r from-amber-300 via-amber-400 to-amber-200 bg-clip-text text-transparent">
-                está te esperando
-              </span>
-            </h1>
-
-            {banner.subtitle && (
-              <p className={`mt-6 text-lg leading-relaxed text-gray-300/80 transition-all duration-500 delay-200 sm:text-xl ${isTransitioning ? "translate-y-4 opacity-0" : "translate-y-0 opacity-100"}`}>
-                {banner.subtitle}
-              </p>
+            {/* ── Coluna direita: imagem destacada ── */}
+            {banner.imageUrl && (
+              <div className={`hidden lg:flex justify-end transition-all duration-500 delay-200 ${isTransitioning ? "translate-y-4 opacity-0" : "translate-y-0 opacity-100"}`}>
+                <div className="relative">
+                  {/* Brilho atrás da imagem */}
+                  <div className="absolute -inset-4 rounded-2xl bg-amber-400/10 blur-2xl" />
+                  <img
+                    src={banner.imageUrl}
+                    alt={banner.title}
+                    className="relative h-[480px] w-[340px] rounded-xl object-cover shadow-2xl shadow-black/60 ring-1 ring-white/10"
+                  />
+                  {/* Gradiente inferior suave */}
+                  <div className="absolute inset-x-0 bottom-0 h-24 rounded-b-xl bg-gradient-to-t from-black/40 to-transparent" />
+                </div>
+              </div>
             )}
 
-            <div className={`mt-10 flex flex-wrap items-center gap-4 transition-all duration-500 delay-300 ${isTransitioning ? "translate-y-4 opacity-0" : "translate-y-0 opacity-100"}`}>
-              <Link
-                href={banner.ctaUrl}
-                className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-amber-500 to-amber-400 px-8 py-4 font-semibold text-black shadow-lg shadow-amber-900/30 transition-all hover:shadow-amber-700/40 hover:shadow-xl active:scale-95"
-              >
-                <span className="relative z-10">{banner.ctaLabel}</span>
-                <svg className="relative z-10 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-                <div className="absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-700 group-hover:translate-x-full" />
-              </Link>
-              <Link
-                href="#eventos"
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-8 py-4 font-medium text-white/80 backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
-              >
-                Ver todos os Rituais
-              </Link>
-            </div>
           </div>
         </div>
       </div>
