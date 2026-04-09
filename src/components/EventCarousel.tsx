@@ -145,7 +145,7 @@ export function EventCarousel({
           ref={rowRef}
           onScroll={checkScroll}
           /* overflow-y-visible deixa o overlay Netflix "sair" para baixo */
-          className="flex gap-3 overflow-x-auto overflow-y-visible pb-36 pt-4 scrollbar-hide"
+          className="flex gap-3 overflow-x-auto overflow-y-visible pb-6 pt-4 scrollbar-hide"
           style={{ scrollSnapType: "x mandatory" }}
         >
           {events.map((event) => (

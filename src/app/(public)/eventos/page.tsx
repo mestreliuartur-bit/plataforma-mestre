@@ -249,7 +249,7 @@ export default async function EventosPage() {
       )}
 
       {/* ── Conteúdo principal ── */}
-      <div className="mx-auto max-w-7xl px-6 lg:px-12 py-10 space-y-2">
+      <div className="mx-auto max-w-7xl px-6 lg:px-12 py-10 space-y-8">
 
         {/* Row "Continuar Jornada" — apenas logados com compras */}
         {session && purchasedEvents.length > 0 && (
@@ -301,7 +301,7 @@ export default async function EventosPage() {
             Entre em contato e o Mestre Liu Artur irá guiá-lo para o trabalho mais adequado à sua situação.
           </p>
           <a
-            href="https://wa.me/5511999990001"
+            href="https://wa.me/5511910998013"
             target="_blank"
             rel="noopener noreferrer"
             className="mt-6 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-8 py-4 text-sm font-semibold text-white transition-all hover:bg-emerald-500"
