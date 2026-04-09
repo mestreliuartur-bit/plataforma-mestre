@@ -128,24 +128,25 @@ export function EventCarousel({
         </div>
       </div>
 
-      {/* Row de cards — overflow-visible para o efeito Netflix sair dos limites */}
-      <div className="relative">
-        {/* Fade esquerda */}
+      {/* Row de cards — pb-56 deixa o overlay (max-h-52) dentro do padding-box,
+          evitando o clipping do overflow-x:auto. O -mb-56 no wrapper colapsa
+          esse espaço para não empurrar a próxima section. */}
+      <div className="relative -mb-56">
+        {/* Fade esquerda — altura fixa = pt-4 + card (320px) */}
         <div
-          className={`pointer-events-none absolute inset-y-0 left-0 z-20 w-10 bg-gradient-to-r ${bgColor} to-transparent transition-opacity duration-300 ${
+          className={`pointer-events-none absolute left-0 top-0 z-20 h-[336px] w-10 bg-gradient-to-r ${bgColor} to-transparent transition-opacity duration-300 ${
             canScrollLeft ? "opacity-100" : "opacity-0"
           }`}
         />
         {/* Fade direita */}
         <div
-          className={`pointer-events-none absolute inset-y-0 right-0 z-20 w-16 bg-gradient-to-l ${bgColor} to-transparent`}
+          className={`pointer-events-none absolute right-0 top-0 z-20 h-[336px] w-16 bg-gradient-to-l ${bgColor} to-transparent`}
         />
 
         <div
           ref={rowRef}
           onScroll={checkScroll}
-          /* overflow-y-visible deixa o overlay Netflix "sair" para baixo */
-          className="flex gap-3 overflow-x-auto overflow-y-visible pb-6 pt-4 scrollbar-hide"
+          className="flex gap-3 overflow-x-auto pb-56 pt-4 scrollbar-hide"
           style={{ scrollSnapType: "x mandatory" }}
         >
           {events.map((event) => (
