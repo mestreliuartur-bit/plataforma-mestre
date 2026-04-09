@@ -21,6 +21,7 @@ export default async function DashboardLayout({
         userName={session.user.name ?? "Usuário"}
         userEmail={session.user.email ?? ""}
         userImage={session.user.image}
+        userRole={session.user.role}
       />
 
       {/* Conteúdo principal com scroll */}

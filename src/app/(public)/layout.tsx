@@ -1,10 +1,14 @@
 import Link from "next/link";
+import { auth } from "@/auth";
 
 // ─────────────────────────────────────────
 // NAVBAR — Área Pública
 // ─────────────────────────────────────────
 
-function Navbar() {
+async function Navbar() {
+  const session = await auth();
+  const isLoggedIn = !!session?.user;
+
   return (
     <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-md">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-12">
@@ -35,19 +39,30 @@ function Navbar() {
 
         {/* Ações */}
         <div className="flex items-center gap-3">
-          <Link
-            href="/login"
-            className="hidden text-sm text-gray-400 transition-colors hover:text-white sm:block"
-          >
-            Entrar
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-full bg-gradient-to-r from-amber-500 to-amber-400 px-3 py-1.5 text-xs font-semibold text-black transition-all hover:shadow-lg hover:shadow-amber-900/30 sm:px-5 sm:py-2 sm:text-sm"
-          >
-            <span className="sm:hidden">Começar</span>
-            <span className="hidden sm:inline">Começar agora</span>
-          </Link>
+          {isLoggedIn ? (
+            <Link
+              href="/dashboard"
+              className="rounded-full bg-gradient-to-r from-amber-500 to-amber-400 px-4 py-2 text-sm font-semibold text-black transition-all hover:shadow-lg hover:shadow-amber-900/30"
+            >
+              Meu Painel
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="hidden text-sm text-gray-400 transition-colors hover:text-white sm:block"
+              >
+                Entrar
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-full bg-gradient-to-r from-amber-500 to-amber-400 px-3 py-1.5 text-xs font-semibold text-black transition-all hover:shadow-lg hover:shadow-amber-900/30 sm:px-5 sm:py-2 sm:text-sm"
+              >
+                <span className="sm:hidden">Começar</span>
+                <span className="hidden sm:inline">Começar agora</span>
+              </Link>
+            </>
+          )}
         </div>
       </nav>
     </header>
