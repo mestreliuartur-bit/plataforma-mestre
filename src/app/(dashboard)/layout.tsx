@@ -16,7 +16,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#0a0a0f]">
-      {/* Sidebar fixa */}
+      {/* Sidebar */}
       <DashboardSidebar
         userName={session.user.name ?? "Usuário"}
         userEmail={session.user.email ?? ""}
@@ -32,7 +32,10 @@ export default async function DashboardLayout({
           <div className="absolute bottom-0 left-64 h-[300px] w-[300px] rounded-full bg-amber-900/8 blur-[100px]" />
         </div>
 
-        <div className="relative z-10 mx-auto max-w-6xl px-8 py-8">
+        {/* Espaçador para o header mobile fixo */}
+        <div className="h-14 md:hidden" />
+
+        <div className="relative z-10 mx-auto max-w-6xl px-4 py-6 md:px-8 md:py-8">
           {children}
         </div>
       </main>

@@ -28,7 +28,10 @@ export default async function AdminLayout({
           <div className="absolute bottom-0 left-64 h-[300px] w-[300px] rounded-full bg-purple-900/5 blur-[120px]" />
         </div>
 
-        <div className="relative z-10 mx-auto max-w-7xl px-8 py-8">
+        {/* Espaçador para o header mobile fixo */}
+        <div className="h-14 md:hidden" />
+
+        <div className="relative z-10 mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-8">
           {children}
         </div>
       </main>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useState, useEffect } from "react";
 
 interface NavItem {
   label: string;
@@ -59,9 +60,13 @@ interface SidebarProps {
 
 export function DashboardSidebar({ userName, userEmail, userImage, userRole }: SidebarProps) {
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  return (
-    <aside className="flex h-full w-64 flex-col border-r border-white/5 bg-[#080810]">
+  // Fecha o menu ao navegar
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
+
+  const sidebarContent = (
+    <>
       {/* Logo */}
       <div className="flex h-16 items-center gap-3 border-b border-white/5 px-6">
         <div className="flex h-8 w-8 items-center justify-center rounded-full border border-amber-400/30 bg-amber-400/10">
@@ -72,46 +77,46 @@ export function DashboardSidebar({ userName, userEmail, userImage, userRole }: S
         <span className="font-serif text-sm font-semibold tracking-wide text-white/80">
           Mestre Liu Artur
         </span>
+        {/* Botão fechar — só mobile */}
+        <button
+          className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:text-white md:hidden"
+          onClick={() => setMobileOpen(false)}
+          aria-label="Fechar menu"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
       {/* Navegação */}
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-6">
-        <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-widest text-gray-600">
-          Menu
-        </p>
+        <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-widest text-gray-600">Menu</p>
         {navItems.map((item) => {
           const isActive =
             item.href === "/dashboard"
               ? pathname === "/dashboard"
               : pathname.startsWith(item.href);
-
           return (
             <Link
               key={item.href}
               href={item.href}
               className={[
                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
-                isActive
-                  ? "bg-amber-400/10 text-amber-400"
-                  : "text-gray-400 hover:bg-white/5 hover:text-white",
+                isActive ? "bg-amber-400/10 text-amber-400" : "text-gray-400 hover:bg-white/5 hover:text-white",
               ].join(" ")}
             >
-              <span className={isActive ? "text-amber-400" : "text-gray-500"}>
-                {item.icon}
-              </span>
+              <span className={isActive ? "text-amber-400" : "text-gray-500"}>{item.icon}</span>
               {item.label}
-              {isActive && (
-                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-amber-400" />
-              )}
+              {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-amber-400" />}
             </Link>
           );
         })}
       </nav>
 
-      {/* Usuário + Sair */}
+      {/* Usuário + botões de ação */}
       <div className="border-t border-white/5 p-4">
         <div className="mb-3 flex items-center gap-3 rounded-xl px-2 py-2">
-          {/* Avatar */}
           <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-sm font-bold text-black">
             {userImage ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -149,6 +154,53 @@ export function DashboardSidebar({ userName, userEmail, userImage, userRole }: S
           Sair da conta
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* ── Header mobile (só aparece em telas pequenas) ── */}
+      <header className="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b border-white/5 bg-[#080810] px-4 md:hidden">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full border border-amber-400/30 bg-amber-400/10">
+            <svg viewBox="0 0 100 100" className="h-3.5 w-3.5 text-amber-400" fill="currentColor">
+              <polygon points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" />
+            </svg>
+          </div>
+          <span className="font-serif text-sm font-semibold text-white/80">Mestre Liu Artur</span>
+        </div>
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 text-gray-400 transition-colors hover:text-white"
+          aria-label="Abrir menu"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </header>
+
+      {/* ── Overlay de fundo mobile ── */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* ── Sidebar ── */}
+      <aside
+        className={[
+          "flex h-full w-64 flex-col border-r border-white/5 bg-[#080810] transition-transform duration-300",
+          // Mobile: fixed drawer, slide in/out
+          "fixed inset-y-0 left-0 z-50",
+          mobileOpen ? "translate-x-0" : "-translate-x-full",
+          // Desktop: static, always visible
+          "md:relative md:translate-x-0 md:z-auto",
+        ].join(" ")}
+      >
+        {sidebarContent}
+      </aside>
+    </>
   );
 }

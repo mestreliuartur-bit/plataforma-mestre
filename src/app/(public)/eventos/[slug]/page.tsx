@@ -113,6 +113,26 @@ export default async function EventoPage({ params }: Props) {
         <div className="relative z-10 mx-auto flex min-h-[85vh] max-w-7xl items-center px-6 py-24 lg:px-12">
           <div className="grid w-full gap-12 lg:grid-cols-[1fr_320px] lg:items-center xl:grid-cols-[1fr_360px]">
 
+            {/* ── Imagem no mobile (acima do texto) ── */}
+            {imageUrl && (
+              <div className="flex justify-center lg:hidden">
+                <div className="relative w-full max-w-xs">
+                  <div className="absolute -inset-2 rounded-2xl bg-amber-400/10 blur-xl" />
+                  <img
+                    src={imageUrl}
+                    alt={event.title}
+                    className="relative w-full rounded-xl object-cover shadow-2xl shadow-black/60 ring-1 ring-white/10"
+                    style={{ aspectRatio: "9/16", maxHeight: 340, objectFit: "cover" }}
+                  />
+                  {!event.isWhatsappLead && event.price !== null && (
+                    <div className="absolute bottom-3 left-3 right-3 rounded-lg bg-black/70 px-3 py-2 text-center backdrop-blur-sm">
+                      <p className="font-serif text-lg font-bold text-amber-400">{formatBRL(Number(event.price))}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* ── Coluna esquerda — texto ── */}
             <div className="max-w-2xl">
               {/* Breadcrumb */}
