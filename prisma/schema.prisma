@@ -37,6 +37,17 @@ enum ContentType {
   AUDIO
 }
 
+enum CourseCategory {
+  UMBANDA
+  MAGIA
+  ESPIRITUALIDADE
+  RITUAIS
+  MEDITACAO
+  ASTROLOGIA
+  TAROT
+  OUTROS
+}
+
 // ─────────────────────────────────────────
 // USER
 // ─────────────────────────────────────────
@@ -55,9 +66,10 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Relações
-  accounts  Account[]
-  sessions  Session[]
-  purchases Purchase[]
+  accounts    Account[]
+  sessions    Session[]
+  purchases   Purchase[]
+  enrollments UserEnrollment[]
 
   @@map("users")
 }
@@ -201,4 +213,72 @@ model Content {
   event Event? @relation(fields: [eventId], references: [id], onDelete: SetNull)
 
   @@map("contents")
+}
+
+// ─────────────────────────────────────────
+// COURSE / LMS
+// ─────────────────────────────────────────
+
+model Course {
+  id             String         @id @default(cuid())
+  slug           String         @unique
+  title          String
+  description    String         @db.Text
+  coverImage     String?        // proporção 9:16 — card vertical
+  bannerImage    String?        // proporção 16:9 — banner horizontal
+  category       CourseCategory @default(OUTROS)
+  isPublished    Boolean        @default(false)
+  price          Decimal?       @db.Decimal(10, 2)
+  isWhatsappLead Boolean        @default(false)
+  whatsappNumber String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  modules     Module[]
+  enrollments UserEnrollment[]
+
+  @@map("courses")
+}
+
+model Module {
+  id        String   @id @default(cuid())
+  title     String
+  order     Int      @default(0)
+  courseId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  @@map("modules")
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  videoUrl    String?  // embed URL (YouTube, Vimeo, Panda, etc.)
+  order       Int      @default(0)
+  duration    Int?     // duração em segundos
+  moduleId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@map("lessons")
+}
+
+model UserEnrollment {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("user_enrollments")
 }
