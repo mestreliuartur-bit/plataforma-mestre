@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { deleteCourse } from "./actions";
+import { DeleteCourseButton } from "./DeleteCourseButton";
 
 const CATEGORY_LABELS: Record<string, string> = {
   UMBANDA: "Umbanda",
@@ -110,15 +110,7 @@ export default async function AdminCursosPage() {
                   >
                     Editar
                   </Link>
-                  <form action={deleteCourse.bind(null, course.id)}>
-                    <button
-                      type="submit"
-                      className="rounded-lg border border-red-500/20 px-3 py-1.5 text-xs font-medium text-red-500/60 transition-colors hover:border-red-500/40 hover:text-red-400"
-                      onClick={(e) => { if (!confirm(`Excluir "${course.title}"?`)) e.preventDefault(); }}
-                    >
-                      Excluir
-                    </button>
-                  </form>
+                  <DeleteCourseButton courseId={course.id} courseTitle={course.title} />
                 </div>
               </div>
             ))}
