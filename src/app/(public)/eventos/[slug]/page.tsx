@@ -242,16 +242,26 @@ export default async function EventoPage({ params }: Props) {
                     <div className="absolute inset-0 -translate-x-full skew-x-12 bg-white/10 transition-transform duration-700 group-hover:translate-x-full" />
                   </a>
                 ) : (
-                  <button
-                    disabled
-                    className="group relative inline-flex cursor-not-allowed items-center gap-3 overflow-hidden rounded-full bg-gradient-to-r from-amber-500 to-amber-400 px-8 py-4 text-base font-bold text-black shadow-lg shadow-amber-900/30 opacity-90 transition-all hover:shadow-amber-700/50 hover:shadow-xl"
-                    title="Checkout em breve"
+                  /* Usuário não comprou: redireciona para login com callbackUrl */
+                  <Link
+                    href={
+                      session
+                        ? `/login?callbackUrl=/eventos/${event.slug}`
+                        : `/login?callbackUrl=/eventos/${event.slug}`
+                    }
+                    className="group relative inline-flex items-center gap-3 overflow-hidden rounded-full bg-gradient-to-r from-amber-500 to-amber-400 px-8 py-4 text-base font-bold text-black shadow-lg shadow-amber-900/30 transition-all hover:shadow-amber-700/50 hover:shadow-xl"
                   >
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
                     </svg>
-                    Reservar Minha Vaga — {event.price !== null ? formatBRL(Number(event.price)) : ""}
-                  </button>
+                    {session ? "Comprar Agora" : "Entrar para Comprar"}
+                    {event.price !== null && (
+                      <span className="ml-1 rounded-full bg-black/20 px-3 py-0.5 text-sm font-bold">
+                        {formatBRL(Number(event.price))}
+                      </span>
+                    )}
+                    <div className="absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-700 group-hover:translate-x-full" />
+                  </Link>
                 )}
 
                 <Link
@@ -261,6 +271,19 @@ export default async function EventoPage({ params }: Props) {
                   ← Ver todos os rituais
                 </Link>
               </div>
+
+              {/* Lembrete: criar conta para visitantes */}
+              {!session && !event.isWhatsappLead && event.price !== null && (
+                <p className="mt-3 text-xs text-gray-600">
+                  Ainda não tem conta?{" "}
+                  <Link
+                    href={`/register?callbackUrl=/eventos/${event.slug}`}
+                    className="text-amber-400/80 underline-offset-2 hover:text-amber-400 hover:underline"
+                  >
+                    Criar conta grátis →
+                  </Link>
+                </p>
+              )}
 
               {/* Garantia */}
               {!event.isWhatsappLead && (
