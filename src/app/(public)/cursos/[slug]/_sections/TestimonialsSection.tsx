@@ -1,5 +1,11 @@
 import type { Testimonial } from "@/types/landing-page";
 
+function resolveCloudinaryUrl(url: string) {
+  if (!url) return url;
+  if (url.startsWith("http")) return url;
+  return `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/c_fill,w_80,h_80,q_auto,f_auto/${url}`;
+}
+
 interface Props {
   testimonials: Testimonial[];
 }
@@ -58,7 +64,7 @@ export function TestimonialsSection({ testimonials }: Props) {
                 {t.photo ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={t.photo}
+                    src={resolveCloudinaryUrl(t.photo)}
                     alt={t.name}
                     className="h-10 w-10 flex-shrink-0 rounded-full object-cover ring-2 ring-white/10"
                   />

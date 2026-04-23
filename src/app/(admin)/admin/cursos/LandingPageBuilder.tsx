@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Block, BlockType, Testimonial, FaqItem } from "@/types/landing-page";
+import type { Block, BlockType, Testimonial, FaqItem, Column } from "@/types/landing-page";
 import { CloudinaryUpload } from "@/components/ui/CloudinaryUpload";
 
 // ── Block type catalogue ──────────────────────────────────────
@@ -23,6 +23,7 @@ const BLOCK_DEFS: BlockDef[] = [
   { type: "about_master", label: "Sobre o Mestre",      desc: "Bio e autoridade",             defaults: {} },
   { type: "faq",          label: "FAQ",                 desc: "Perguntas e respostas",        defaults: { faq: [] } },
   { type: "cta",          label: "Chamada para Ação",   desc: "Seção de conversão",           defaults: { heading: "Pronto para começar?", text: "" } },
+  { type: "columns",      label: "Colunas",             desc: "2 ou 3 colunas lado a lado",  defaults: { columnCount: 2, columns: [] } },
   { type: "divider",      label: "Divisor",             desc: "Linha separadora",             defaults: {} },
   { type: "spacer",       label: "Espaçador",           desc: "Espaço em branco",             defaults: { size: "md" } },
 ];
@@ -278,8 +279,8 @@ function BlockEditForm({
                 </div>
               </div>
               <div className="mt-3">
-                <label className={labelClass}>Foto (URL)</label>
-                <input type="text" value={t.photo ?? ""} onChange={(e) => updateT(t.id, { photo: e.target.value })} placeholder="https://..." className={inputClass} />
+                <label className={labelClass}>Foto</label>
+                <CloudinaryUpload value={t.photo ?? ""} onChange={(url) => updateT(t.id, { photo: url })} />
               </div>
               <div className="mt-3">
                 <label className={labelClass}>Depoimento *</label>
@@ -306,15 +307,22 @@ function BlockEditForm({
     // ── About master ──
     case "about_master":
       return (
-        <div>
-          <label className={labelClass}>Bio customizada (opcional)</label>
-          <textarea
-            value={block.customText ?? ""}
-            onChange={(e) => onUpdate({ customText: e.target.value })}
-            rows={5}
-            placeholder="Deixe em branco para exibir o texto padrão do Mestre."
-            className={`${inputClass} resize-none leading-relaxed`}
-          />
+        <div className="space-y-4">
+          <div>
+            <label className={labelClass}>Foto do Mestre</label>
+            <CloudinaryUpload value={block.masterPhoto ?? ""} onChange={(url) => onUpdate({ masterPhoto: url })} />
+            <p className="mt-1.5 text-[11px] text-gray-600">Recomendado: foto quadrada ou proporção 1:1.</p>
+          </div>
+          <div>
+            <label className={labelClass}>Bio customizada (opcional)</label>
+            <textarea
+              value={block.customText ?? ""}
+              onChange={(e) => onUpdate({ customText: e.target.value })}
+              rows={5}
+              placeholder="Deixe em branco para exibir o texto padrão do Mestre."
+              className={`${inputClass} resize-none leading-relaxed`}
+            />
+          </div>
         </div>
       );
 
@@ -458,6 +466,83 @@ function BlockEditForm({
           {mode === "course" && (
             <p className="text-[11px] text-gray-600">O botão detecta automaticamente o estado do visitante: comprar, acessar ou WhatsApp do curso.</p>
           )}
+        </div>
+      );
+    }
+
+    // ── Columns ──
+    case "columns": {
+      const count = block.columnCount ?? 2;
+      const cols = block.columns ?? [];
+
+      function syncCount(newCount: 2 | 3) {
+        const current = block.columns ?? [];
+        let next: Column[];
+        if (newCount > current.length) {
+          next = [...current, ...Array.from({ length: newCount - current.length }, () => ({ id: uid(), imageUrl: "", heading: "", text: "", align: "left" as const }))];
+        } else {
+          next = current.slice(0, newCount);
+        }
+        onUpdate({ columnCount: newCount, columns: next });
+      }
+
+      function updateCol(id: string, patch: Partial<Column>) {
+        onUpdate({ columns: cols.map((c) => (c.id === id ? { ...c, ...patch } : c)) });
+      }
+
+      return (
+        <div className="space-y-5">
+          <div>
+            <label className={labelClass}>Número de colunas</label>
+            <div className="flex gap-2">
+              {([2, 3] as const).map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => syncCount(n)}
+                  className={`rounded-lg px-5 py-2 text-sm font-bold transition-colors ${
+                    count === n ? "bg-amber-400/20 text-amber-400" : "border border-white/10 text-gray-500 hover:text-white"
+                  }`}
+                >
+                  {n} colunas
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {cols.map((col, i) => (
+            <div key={col.id} className="rounded-xl border border-white/5 bg-white/[0.03] p-4 space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Coluna {i + 1}</p>
+              <div>
+                <label className={labelClass}>Imagem</label>
+                <CloudinaryUpload value={col.imageUrl ?? ""} onChange={(url) => updateCol(col.id, { imageUrl: url })} />
+              </div>
+              <div>
+                <label className={labelClass}>Título</label>
+                <input
+                  type="text"
+                  value={col.heading ?? ""}
+                  onChange={(e) => updateCol(col.id, { heading: e.target.value })}
+                  placeholder="Título da coluna"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Texto</label>
+                <textarea
+                  value={col.text ?? ""}
+                  onChange={(e) => updateCol(col.id, { text: e.target.value })}
+                  rows={3}
+                  placeholder="Descrição ou texto da coluna"
+                  className={`${inputClass} resize-none`}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Alinhamento</label>
+                <AlignControl value={col.align} onChange={(v) => updateCol(col.id, { align: v })} />
+              </div>
+            </div>
+          ))}
         </div>
       );
     }
@@ -626,6 +711,10 @@ export function LandingPageBuilder({
       visible: true,
       ...def.defaults,
     };
+    if (type === "columns") {
+      const count = (newBlock.columnCount ?? 2) as number;
+      newBlock.columns = Array.from({ length: count }, () => ({ id: uid(), imageUrl: "", heading: "", text: "", align: "left" as const }));
+    }
     onChange([...blocks, newBlock]);
     setExpandedId(newBlock.id);
     setShowPicker(false);

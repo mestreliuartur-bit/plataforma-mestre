@@ -3,6 +3,7 @@ export type BlockType =
   | "text"
   | "image"
   | "video"
+  | "columns"
   | "trust_bar"
   | "testimonials"
   | "about_master"
@@ -26,6 +27,14 @@ export interface FaqItem {
   answer: string;
 }
 
+export interface Column {
+  id: string;
+  imageUrl?: string;
+  heading?: string;
+  text?: string;
+  align?: "left" | "center" | "right";
+}
+
 export interface Block {
   id: string;
   type: BlockType;
@@ -40,14 +49,17 @@ export interface Block {
   size?: "sm" | "md" | "lg"; // spacer
   style?: "full" | "contained"; // image layout
   customText?: string;        // about_master bio override
+  masterPhoto?: string;       // about_master photo
   heading?: string;           // cta section heading
-  ctaType?: "course" | "url" | "whatsapp"; // cta button mode
-  ctaUrl?: string;            // cta — custom link
-  ctaWhatsappNumber?: string; // cta — whatsapp number
-  ctaWhatsappMessage?: string; // cta — whatsapp message
-  ctaButtonText?: string;     // cta — button label
+  ctaType?: "course" | "url" | "whatsapp";
+  ctaUrl?: string;
+  ctaWhatsappNumber?: string;
+  ctaWhatsappMessage?: string;
+  ctaButtonText?: string;
   testimonials?: Testimonial[];
   faq?: FaqItem[];
+  columnCount?: 2 | 3;        // columns block
+  columns?: Column[];         // columns block
 }
 
 export interface LandingPageConfig {

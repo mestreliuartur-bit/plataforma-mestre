@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Block } from "@/types/landing-page";
+import type { Block, Column } from "@/types/landing-page";
 import { TrustBar } from "./TrustBar";
 import { TestimonialsSection } from "./TestimonialsSection";
 import { AboutMasterSection } from "./AboutMasterSection";
@@ -200,6 +200,39 @@ function SpacerBlock({ block }: { block: Block }) {
   return <div className={spacerSize[block.size ?? "md"]} aria-hidden="true" />;
 }
 
+function ColumnsBlock({ block }: { block: Block }) {
+  const cols = block.columns ?? [];
+  if (!cols.length) return null;
+  const count = block.columnCount ?? 2;
+  const gridClass = count === 3 ? "lg:grid-cols-3" : "lg:grid-cols-2";
+  return (
+    <section className="py-12">
+      <div className="mx-auto max-w-5xl px-6 lg:px-12">
+        <div className={`grid grid-cols-1 gap-8 ${gridClass}`}>
+          {cols.map((col) => (
+            <div key={col.id} className={`flex flex-col gap-4 ${alignClass[col.align ?? "left"]}`}>
+              {col.imageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={resolveCloudinaryUrl(col.imageUrl)}
+                  alt={col.heading ?? ""}
+                  className="w-full rounded-2xl object-cover"
+                />
+              )}
+              {col.heading && (
+                <h3 className="font-serif text-xl font-bold text-white">{col.heading}</h3>
+              )}
+              {col.text && (
+                <p className="leading-relaxed text-gray-400 whitespace-pre-line">{col.text}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── Main dispatcher ───────────────────────────────────────────
 
 export function BlockRenderer({ block, ctaProps }: { block: Block; ctaProps: CtaProps }) {
@@ -221,13 +254,15 @@ export function BlockRenderer({ block, ctaProps }: { block: Block; ctaProps: Cta
         ? <TestimonialsSection testimonials={block.testimonials} />
         : null;
     case "about_master":
-      return <AboutMasterSection customText={block.customText} />;
+      return <AboutMasterSection customText={block.customText} masterPhoto={block.masterPhoto} />;
     case "faq":
       return block.faq?.length
         ? <FaqSection faq={block.faq} />
         : null;
     case "cta":
       return <CtaBlock block={block} ctaProps={ctaProps} />;
+    case "columns":
+      return <ColumnsBlock block={block} />;
     case "divider":
       return <DividerBlock />;
     case "spacer":
