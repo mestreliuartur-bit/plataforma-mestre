@@ -5,7 +5,6 @@ import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import type { LandingPageConfig } from "@/types/landing-page";
 import { TrustBar } from "./_sections/TrustBar";
-import { CurriculumSection } from "./_sections/CurriculumSection";
 import { TestimonialsSection } from "./_sections/TestimonialsSection";
 import { AboutMasterSection } from "./_sections/AboutMasterSection";
 import { FaqSection } from "./_sections/FaqSection";
@@ -41,12 +40,6 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const formatBRL = (v: number | string) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(v));
-
-function formatDuration(seconds: number | null) {
-  if (!seconds) return null;
-  const m = Math.floor(seconds / 60);
-  return m >= 60 ? `${Math.floor(m / 60)}h${m % 60 > 0 ? ` ${m % 60}min` : ""}` : `${m}min`;
-}
 
 function toEmbedUrl(url: string) {
   const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
@@ -97,11 +90,6 @@ export default async function CourseSalesPage({ params }: Props) {
     if (m.lessons.length > 0) { firstLessonId = m.lessons[0].id; break; }
   }
 
-  const totalLessons = course.modules.reduce((acc, m) => acc + m.lessons.length, 0);
-  const totalDuration = course.modules.reduce(
-    (acc, m) => acc + m.lessons.reduce((a, l) => a + (l.duration ?? 0), 0), 0
-  );
-
   const coverUrl = course.coverImage
     ? course.coverImage.startsWith("http")
       ? course.coverImage
@@ -113,7 +101,7 @@ export default async function CourseSalesPage({ params }: Props) {
     : `https://wa.me/5511910998013?text=${encodeURIComponent(`Olá! Tenho interesse no curso: ${course.title}`)}`;
 
   const priceLabel = course.price ? formatBRL(Number(course.price)) : null;
-  const heroEmbedUrl = lp.heroVideoUrl ? toEmbedUrl(lp.heroVideoUrl) : null;
+  const videoEmbedUrl = lp.heroVideoUrl ? toEmbedUrl(lp.heroVideoUrl) : null;
   const heroSubtitle = lp.heroSubtitle || course.description.split("\n")[0];
 
   // Section visibility (defaults)
@@ -173,22 +161,6 @@ export default async function CourseSalesPage({ params }: Props) {
               </h1>
 
               <p className="mt-6 text-lg leading-relaxed text-gray-400">{heroSubtitle}</p>
-
-              {/* Stats */}
-              {(course.modules.length > 0 || totalLessons > 0) && (
-                <div className="mt-6 flex flex-wrap gap-6">
-                  {[
-                    course.modules.length > 0 && { label: "Módulos", value: String(course.modules.length) },
-                    totalLessons > 0 && { label: "Aulas", value: String(totalLessons) },
-                    totalDuration > 0 && { label: "Duração", value: formatDuration(totalDuration) ?? "" },
-                  ].filter(Boolean).map((s) => s && (
-                    <div key={s.label} className="flex items-center gap-2 text-sm text-gray-400">
-                      <span className="font-serif text-xl font-bold text-white">{s.value}</span>
-                      <span>{s.label}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
 
               {/* CTA principal */}
               <div className="mt-10 flex flex-wrap items-center gap-4">
@@ -259,44 +231,32 @@ export default async function CourseSalesPage({ params }: Props) {
               </div>
             </div>
 
-            {/* Coluna direita — vídeo promo ou capa */}
+            {/* Coluna direita — capa 9:16 */}
             <div className="flex justify-center lg:justify-end">
-              <div className="relative w-full max-w-[320px]">
+              <div className="relative">
                 <div className="absolute -inset-4 rounded-3xl bg-purple-400/10 blur-2xl" />
-                {heroEmbedUrl ? (
-                  <div className="relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/60">
-                    <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
-                      <iframe
-                        src={heroEmbedUrl}
-                        className="absolute inset-0 h-full w-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        title={`Preview — ${course.title}`}
-                      />
-                    </div>
-                  </div>
-                ) : coverUrl ? (
-                  <div
-                    className="relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/60"
-                    style={{ width: 280, height: 498 }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                <div
+                  className="relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/60"
+                  style={{ width: 280, height: 498 }}
+                >
+                  {coverUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img src={coverUrl} alt={course.title} className="h-full w-full object-cover" />
-                    <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/80 to-transparent" />
-                    {priceLabel && !isEnrolled && !course.isWhatsappLead && (
-                      <div className="absolute bottom-3 inset-x-3 rounded-xl bg-black/70 px-4 py-3 text-center backdrop-blur-sm">
-                        <p className="text-xs text-gray-400">Investimento</p>
-                        <p className="font-serif text-xl font-bold text-amber-400">{priceLabel}</p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex h-60 w-full items-center justify-center rounded-2xl border border-white/5 bg-gradient-to-br from-purple-950 via-zinc-900 to-zinc-950">
-                    <svg viewBox="0 0 100 100" className="h-20 w-20 text-purple-800/40" fill="currentColor">
-                      <polygon points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" />
-                    </svg>
-                  </div>
-                )}
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-950 via-zinc-900 to-zinc-950">
+                      <svg viewBox="0 0 100 100" className="h-20 w-20 text-purple-800/40" fill="currentColor">
+                        <polygon points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" />
+                      </svg>
+                    </div>
+                  )}
+                  <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/80 to-transparent" />
+                  {priceLabel && !isEnrolled && !course.isWhatsappLead && (
+                    <div className="absolute bottom-3 inset-x-3 rounded-xl bg-black/70 px-4 py-3 text-center backdrop-blur-sm">
+                      <p className="text-xs text-gray-400">Investimento</p>
+                      <p className="font-serif text-xl font-bold text-amber-400">{priceLabel}</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -306,14 +266,19 @@ export default async function CourseSalesPage({ params }: Props) {
       {/* ── TRUST BAR ── */}
       {showTrustBar && <TrustBar />}
 
-      {/* ── CURRÍCULO ── */}
-      {course.modules.length > 0 && (
-        <CurriculumSection
-          modules={course.modules}
-          totalLessons={totalLessons}
-          totalDuration={totalDuration > 0 ? formatDuration(totalDuration) : null}
-          isEnrolled={isEnrolled}
-        />
+      {/* ── VÍDEO ── */}
+      {videoEmbedUrl && (
+        <section className="bg-black">
+          <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
+            <iframe
+              src={videoEmbedUrl}
+              className="absolute inset-0 h-full w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              title={`Apresentação — ${course.title}`}
+            />
+          </div>
+        </section>
       )}
 
       {/* ── DEPOIMENTOS ── */}
