@@ -40,7 +40,12 @@ export interface Block {
   size?: "sm" | "md" | "lg"; // spacer
   style?: "full" | "contained"; // image layout
   customText?: string;        // about_master bio override
-  heading?: string;           // cta, testimonials, about_master section heading
+  heading?: string;           // cta section heading
+  ctaType?: "course" | "url" | "whatsapp"; // cta button mode
+  ctaUrl?: string;            // cta — custom link
+  ctaWhatsappNumber?: string; // cta — whatsapp number
+  ctaWhatsappMessage?: string; // cta — whatsapp message
+  ctaButtonText?: string;     // cta — button label
   testimonials?: Testimonial[];
   faq?: FaqItem[];
 }

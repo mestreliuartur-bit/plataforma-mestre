@@ -364,7 +364,8 @@ function BlockEditForm({
     }
 
     // ── CTA ──
-    case "cta":
+    case "cta": {
+      const mode = block.ctaType ?? "course";
       return (
         <div className="space-y-4">
           <div>
@@ -375,9 +376,91 @@ function BlockEditForm({
             <label className={labelClass}>Subtítulo</label>
             <textarea value={block.text ?? ""} onChange={(e) => onUpdate({ text: e.target.value })} rows={2} placeholder="Uma frase motivadora..." className={`${inputClass} resize-none`} />
           </div>
-          <p className="text-[11px] text-gray-600">O botão exibe automaticamente a ação correta (comprar, WhatsApp ou acessar) com base no estado do usuário.</p>
+
+          {/* Modo do botão */}
+          <div>
+            <label className={labelClass}>Modo do botão</label>
+            <div className="flex gap-2 flex-wrap">
+              {([
+                { v: "course", label: "Automático (curso)" },
+                { v: "url",    label: "Link personalizado" },
+                { v: "whatsapp", label: "WhatsApp" },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.v}
+                  type="button"
+                  onClick={() => onUpdate({ ctaType: opt.v })}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    mode === opt.v
+                      ? "bg-amber-400/20 text-amber-400"
+                      : "border border-white/10 text-gray-500 hover:text-white"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Texto do botão (todos os modos) */}
+          <div>
+            <label className={labelClass}>Texto do botão</label>
+            <input
+              type="text"
+              value={block.ctaButtonText ?? ""}
+              onChange={(e) => onUpdate({ ctaButtonText: e.target.value })}
+              placeholder={mode === "whatsapp" ? "Falar no WhatsApp" : mode === "url" ? "Saiba Mais" : "Comprar Agora (automático)"}
+              className={inputClass}
+            />
+          </div>
+
+          {/* Campos específicos por modo */}
+          {mode === "url" && (
+            <div>
+              <label className={labelClass}>URL de destino *</label>
+              <input
+                type="text"
+                value={block.ctaUrl ?? ""}
+                onChange={(e) => onUpdate({ ctaUrl: e.target.value })}
+                placeholder="https://... ou /pagina-interna"
+                className={inputClass}
+              />
+              <p className="mt-1 text-[11px] text-gray-600">Links externos abrem em nova aba. Links internos (/...) navegam na mesma aba.</p>
+            </div>
+          )}
+
+          {mode === "whatsapp" && (
+            <>
+              <div>
+                <label className={labelClass}>Número do WhatsApp *</label>
+                <input
+                  type="text"
+                  value={block.ctaWhatsappNumber ?? ""}
+                  onChange={(e) => onUpdate({ ctaWhatsappNumber: e.target.value })}
+                  placeholder="5511999999999"
+                  className={inputClass}
+                />
+                <p className="mt-1 text-[11px] text-gray-600">Código do país + DDD + número, sem espaços ou traços.</p>
+              </div>
+              <div>
+                <label className={labelClass}>Mensagem pré-definida</label>
+                <textarea
+                  value={block.ctaWhatsappMessage ?? ""}
+                  onChange={(e) => onUpdate({ ctaWhatsappMessage: e.target.value })}
+                  rows={3}
+                  placeholder="Olá! Tenho interesse em..."
+                  className={`${inputClass} resize-none`}
+                />
+              </div>
+            </>
+          )}
+
+          {mode === "course" && (
+            <p className="text-[11px] text-gray-600">O botão detecta automaticamente o estado do visitante: comprar, acessar ou WhatsApp do curso.</p>
+          )}
         </div>
       );
+    }
 
     // ── Divider ──
     case "divider":
