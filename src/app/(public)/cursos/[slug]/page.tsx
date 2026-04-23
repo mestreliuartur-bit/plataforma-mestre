@@ -3,6 +3,13 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import type { LandingPageConfig } from "@/types/landing-page";
+import { TrustBar } from "./_sections/TrustBar";
+import { CurriculumSection } from "./_sections/CurriculumSection";
+import { TestimonialsSection } from "./_sections/TestimonialsSection";
+import { AboutMasterSection } from "./_sections/AboutMasterSection";
+import { FaqSection } from "./_sections/FaqSection";
+import { FloatingCta } from "./_sections/FloatingCta";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -10,9 +17,20 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const course = await db.course.findUnique({ where: { slug }, select: { title: true, description: true } });
+  const course = await db.course.findUnique({
+    where: { slug },
+    select: { title: true, description: true, coverImage: true },
+  });
   if (!course) return {};
-  return { title: course.title, description: course.description.slice(0, 160) };
+  return {
+    title: course.title,
+    description: course.description.slice(0, 160),
+    openGraph: {
+      title: course.title,
+      description: course.description.slice(0, 160),
+      images: course.coverImage ? [course.coverImage] : [],
+    },
+  };
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -28,6 +46,14 @@ function formatDuration(seconds: number | null) {
   if (!seconds) return null;
   const m = Math.floor(seconds / 60);
   return m >= 60 ? `${Math.floor(m / 60)}h${m % 60 > 0 ? ` ${m % 60}min` : ""}` : `${m}min`;
+}
+
+function toEmbedUrl(url: string) {
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}?rel=0&modestbranding=1&autoplay=0`;
+  const vimeo = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`;
+  return url;
 }
 
 export default async function CourseSalesPage({ params }: Props) {
@@ -53,7 +79,8 @@ export default async function CourseSalesPage({ params }: Props) {
 
   if (!course) notFound();
 
-  // Checar se o usuário já está matriculado
+  const lp = (course.landingPageConfig ?? {}) as LandingPageConfig;
+
   let isEnrolled = false;
   let firstLessonId: string | null = null;
 
@@ -64,10 +91,8 @@ export default async function CourseSalesPage({ params }: Props) {
     isEnrolled = !!enrollment;
   }
 
-  // Admins têm acesso total
   if (session?.user?.role === "ADMIN") isEnrolled = true;
 
-  // Primeira aula para o botão "Continuar"
   for (const m of course.modules) {
     if (m.lessons.length > 0) { firstLessonId = m.lessons[0].id; break; }
   }
@@ -87,12 +112,22 @@ export default async function CourseSalesPage({ params }: Props) {
     ? `https://wa.me/${course.whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent(`Olá! Tenho interesse no curso: ${course.title}`)}`
     : `https://wa.me/5511910998013?text=${encodeURIComponent(`Olá! Tenho interesse no curso: ${course.title}`)}`;
 
+  const priceLabel = course.price ? formatBRL(Number(course.price)) : null;
+  const heroEmbedUrl = lp.heroVideoUrl ? toEmbedUrl(lp.heroVideoUrl) : null;
+  const heroSubtitle = lp.heroSubtitle || course.description.split("\n")[0];
+
+  // Section visibility (defaults)
+  const showTrustBar = lp.showTrustBar !== false;
+  const showAboutMaster = lp.showAboutMaster !== false;
+  const showTestimonials = lp.showTestimonials === true && (lp.testimonials?.length ?? 0) > 0;
+  const showFaq = lp.showFaq === true && (lp.faq?.length ?? 0) > 0;
+  const showFloatingCta = lp.showFloatingCta !== false;
+
   return (
     <main className="min-h-screen bg-[#0a0a0f]">
 
       {/* ── HERO ── */}
       <section className="relative min-h-[80vh] overflow-hidden">
-        {/* Fundo blur */}
         {coverUrl && (
           <div
             className="absolute inset-0 bg-cover bg-center opacity-15"
@@ -105,24 +140,9 @@ export default async function CourseSalesPage({ params }: Props) {
         <div className="pointer-events-none absolute right-1/3 top-1/4 h-[400px] w-[400px] rounded-full bg-purple-900/15 blur-[100px]" />
 
         <div className="relative z-10 mx-auto flex min-h-[80vh] max-w-7xl items-center px-6 py-24 lg:px-12">
-          <div className="grid w-full gap-12 lg:grid-cols-[1fr_300px] lg:items-center xl:grid-cols-[1fr_340px]">
+          <div className="grid w-full gap-12 lg:grid-cols-[1fr_320px] lg:items-center">
 
-            {/* Imagem mobile */}
-            {coverUrl && (
-              <div className="flex justify-center lg:hidden">
-                <div className="relative w-full max-w-[200px]">
-                  <div className="absolute -inset-2 rounded-2xl bg-purple-400/10 blur-xl" />
-                  <img
-                    src={coverUrl}
-                    alt={course.title}
-                    className="relative w-full rounded-xl object-cover shadow-2xl shadow-black/60 ring-1 ring-white/10"
-                    style={{ aspectRatio: "9/16" }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Coluna esquerda */}
+            {/* Coluna esquerda — texto */}
             <div className="max-w-2xl">
               {/* Breadcrumb */}
               <nav className="mb-8 flex items-center gap-2 text-xs text-gray-600">
@@ -148,36 +168,34 @@ export default async function CourseSalesPage({ params }: Props) {
                 )}
               </div>
 
-              {/* Título */}
               <h1 className="font-serif text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
                 {course.title}
               </h1>
 
-              {/* Descrição */}
-              <p className="mt-6 text-lg leading-relaxed text-gray-400">
-                {course.description.split("\n")[0]}
-              </p>
+              <p className="mt-6 text-lg leading-relaxed text-gray-400">{heroSubtitle}</p>
 
               {/* Stats */}
-              <div className="mt-6 flex flex-wrap gap-5">
-                {[
-                  { label: "Módulos", value: String(course.modules.length) },
-                  { label: "Aulas", value: String(totalLessons) },
-                  ...(totalDuration > 0 ? [{ label: "Duração total", value: formatDuration(totalDuration) ?? "" }] : []),
-                ].map((s) => (
-                  <div key={s.label} className="flex items-center gap-2 text-sm text-gray-400">
-                    <span className="font-serif font-bold text-white">{s.value}</span>
-                    <span>{s.label}</span>
-                  </div>
-                ))}
-              </div>
+              {(course.modules.length > 0 || totalLessons > 0) && (
+                <div className="mt-6 flex flex-wrap gap-6">
+                  {[
+                    course.modules.length > 0 && { label: "Módulos", value: String(course.modules.length) },
+                    totalLessons > 0 && { label: "Aulas", value: String(totalLessons) },
+                    totalDuration > 0 && { label: "Duração", value: formatDuration(totalDuration) ?? "" },
+                  ].filter(Boolean).map((s) => s && (
+                    <div key={s.label} className="flex items-center gap-2 text-sm text-gray-400">
+                      <span className="font-serif text-xl font-bold text-white">{s.value}</span>
+                      <span>{s.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-              {/* ── CTA PRINCIPAL ── */}
+              {/* CTA principal */}
               <div className="mt-10 flex flex-wrap items-center gap-4">
                 {isEnrolled ? (
                   <>
                     <Link
-                      href={firstLessonId ? `/cursos/${slug}/${firstLessonId}` : `/dashboard/cursos`}
+                      href={firstLessonId ? `/cursos/${slug}/${firstLessonId}` : `/dashboard/meus-cursos`}
                       className="group relative inline-flex items-center gap-3 overflow-hidden rounded-full bg-gradient-to-r from-amber-500 to-amber-400 px-8 py-4 text-base font-bold text-black shadow-lg shadow-amber-900/30 transition-all hover:shadow-amber-700/50 hover:shadow-xl"
                     >
                       <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -186,8 +204,8 @@ export default async function CourseSalesPage({ params }: Props) {
                       Acessar Curso
                       <div className="absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-700 group-hover:translate-x-full" />
                     </Link>
-                    <Link href="/dashboard/cursos" className="text-sm text-gray-500 hover:text-gray-300">
-                      Ver todos os meus cursos →
+                    <Link href="/dashboard/meus-cursos" className="text-sm text-gray-500 hover:text-gray-300">
+                      Ver meus cursos →
                     </Link>
                   </>
                 ) : course.isWhatsappLead ? (
@@ -206,16 +224,16 @@ export default async function CourseSalesPage({ params }: Props) {
                 ) : (
                   <>
                     <Link
-                      href={session ? `/login?callbackUrl=/cursos/${slug}` : `/login?callbackUrl=/cursos/${slug}`}
+                      href={`/login?callbackUrl=/cursos/${slug}`}
                       className="group relative inline-flex items-center gap-3 overflow-hidden rounded-full bg-gradient-to-r from-amber-500 to-amber-400 px-8 py-4 text-base font-bold text-black shadow-lg shadow-amber-900/30 transition-all hover:shadow-amber-700/50 hover:shadow-xl"
                     >
                       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
                       </svg>
                       {session ? "Comprar Agora" : "Entrar para Comprar"}
-                      {course.price && (
+                      {priceLabel && (
                         <span className="rounded-full bg-black/20 px-3 py-0.5 text-sm font-bold">
-                          {formatBRL(Number(course.price))}
+                          {priceLabel}
                         </span>
                       )}
                       <div className="absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-700 group-hover:translate-x-full" />
@@ -232,112 +250,90 @@ export default async function CourseSalesPage({ params }: Props) {
                 )}
               </div>
 
-              {/* Garantia */}
+              {/* Micro trust */}
               <div className="mt-6 flex items-center gap-3 text-xs text-gray-600">
                 <svg className="h-4 w-4 flex-shrink-0 text-amber-400/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                 </svg>
-                <span>Acesso vitalício após a compra · Suporte direto com o Mestre</span>
+                <span>Acesso vitalício · Garantia de 7 dias · Suporte direto com o Mestre</span>
               </div>
             </div>
 
-            {/* Coluna direita — imagem desktop */}
-            <div className="hidden lg:flex lg:justify-end">
-              <div className="relative">
+            {/* Coluna direita — vídeo promo ou capa */}
+            <div className="flex justify-center lg:justify-end">
+              <div className="relative w-full max-w-[320px]">
                 <div className="absolute -inset-4 rounded-3xl bg-purple-400/10 blur-2xl" />
-                <div className="relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/60" style={{ width: 260, height: 462 }}>
-                  {coverUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
+                {heroEmbedUrl ? (
+                  <div className="relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/60">
+                    <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
+                      <iframe
+                        src={heroEmbedUrl}
+                        className="absolute inset-0 h-full w-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title={`Preview — ${course.title}`}
+                      />
+                    </div>
+                  </div>
+                ) : coverUrl ? (
+                  <div
+                    className="relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/60"
+                    style={{ width: 280, height: 498 }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={coverUrl} alt={course.title} className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-950 via-zinc-900 to-zinc-950">
-                      <svg viewBox="0 0 100 100" className="h-20 w-20 text-purple-800/40" fill="currentColor">
-                        <polygon points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" />
-                      </svg>
-                    </div>
-                  )}
-                  <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/80 to-transparent" />
-                  {course.price && !isEnrolled && !course.isWhatsappLead && (
-                    <div className="absolute bottom-3 inset-x-3 rounded-xl bg-black/70 px-4 py-3 text-center backdrop-blur-sm">
-                      <p className="text-xs text-gray-400">Investimento</p>
-                      <p className="font-serif text-xl font-bold text-amber-400">{formatBRL(Number(course.price))}</p>
-                    </div>
-                  )}
-                </div>
+                    <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/80 to-transparent" />
+                    {priceLabel && !isEnrolled && !course.isWhatsappLead && (
+                      <div className="absolute bottom-3 inset-x-3 rounded-xl bg-black/70 px-4 py-3 text-center backdrop-blur-sm">
+                        <p className="text-xs text-gray-400">Investimento</p>
+                        <p className="font-serif text-xl font-bold text-amber-400">{priceLabel}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex h-60 w-full items-center justify-center rounded-2xl border border-white/5 bg-gradient-to-br from-purple-950 via-zinc-900 to-zinc-950">
+                    <svg viewBox="0 0 100 100" className="h-20 w-20 text-purple-800/40" fill="currentColor">
+                      <polygon points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" />
+                    </svg>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Conteúdo Programático ── */}
+      {/* ── TRUST BAR ── */}
+      {showTrustBar && <TrustBar />}
+
+      {/* ── CURRÍCULO ── */}
       {course.modules.length > 0 && (
-        <section className="border-t border-white/5 bg-[#0a0a0f] py-16">
-          <div className="mx-auto max-w-4xl px-6 lg:px-12">
-            <h2 className="mb-2 font-serif text-3xl font-bold text-white">O que você vai aprender</h2>
-            <p className="mb-10 text-gray-500">
-              {course.modules.length} módulo{course.modules.length !== 1 ? "s" : ""} · {totalLessons} aula{totalLessons !== 1 ? "s" : ""}
-              {totalDuration > 0 && ` · ${formatDuration(totalDuration)} de conteúdo`}
-            </p>
-
-            <div className="space-y-3">
-              {course.modules.map((module, mi) => (
-                <div key={module.id} className="overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02]">
-                  {/* Header do módulo */}
-                  <div className="flex items-center gap-4 px-6 py-4">
-                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-amber-400/20 bg-amber-400/5 text-sm font-bold text-amber-400">
-                      {mi + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-white">{module.title}</p>
-                      <p className="text-xs text-gray-500">{module.lessons.length} aula{module.lessons.length !== 1 ? "s" : ""}</p>
-                    </div>
-                  </div>
-
-                  {/* Lista de aulas (sem links — apenas preview) */}
-                  {module.lessons.length > 0 && (
-                    <div className="border-t border-white/5">
-                      {module.lessons.map((lesson, li) => (
-                        <div key={lesson.id} className="flex items-center gap-3 border-b border-white/5 px-6 py-3 last:border-b-0">
-                          <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-white/5 text-[10px] text-gray-500">
-                            {isEnrolled ? (
-                              <svg className="h-3 w-3 text-amber-400/60" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
-                              </svg>
-                            ) : (
-                              <svg className="h-3 w-3 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                              </svg>
-                            )}
-                          </div>
-                          <p className={`flex-1 truncate text-sm ${isEnrolled ? "text-gray-300" : "text-gray-500"}`}>
-                            {li + 1}. {lesson.title}
-                          </p>
-                          {lesson.duration && (
-                            <span className="flex-shrink-0 text-[10px] text-gray-600">
-                              {formatDuration(lesson.duration)}
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <CurriculumSection
+          modules={course.modules}
+          totalLessons={totalLessons}
+          totalDuration={totalDuration > 0 ? formatDuration(totalDuration) : null}
+          isEnrolled={isEnrolled}
+        />
       )}
 
-      {/* ── CTA final ── */}
+      {/* ── DEPOIMENTOS ── */}
+      {showTestimonials && lp.testimonials && (
+        <TestimonialsSection testimonials={lp.testimonials} />
+      )}
+
+      {/* ── SOBRE O MESTRE ── */}
+      {showAboutMaster && <AboutMasterSection customText={lp.aboutMasterText} />}
+
+      {/* ── FAQ ── */}
+      {showFaq && lp.faq && <FaqSection faq={lp.faq} />}
+
+      {/* ── CTA FINAL ── */}
       {!isEnrolled && (
         <section className="border-t border-white/5 py-20">
           <div className="mx-auto max-w-2xl px-6 text-center">
-            <h2 className="font-serif text-3xl font-bold text-white">
-              Pronto para começar?
-            </h2>
+            <h2 className="font-serif text-3xl font-bold text-white">Pronto para começar?</h2>
             <p className="mt-4 text-gray-400">
-              Adquira o curso, acesse sua área de membro e transforme seu conhecimento espiritual.
+              Adquira o curso, acesse sua área de membro e transforme sua jornada espiritual.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               {course.isWhatsappLead ? (
@@ -351,14 +347,17 @@ export default async function CourseSalesPage({ params }: Props) {
                 </a>
               ) : (
                 <Link
-                  href={session ? `/login?callbackUrl=/cursos/${slug}` : `/login?callbackUrl=/cursos/${slug}`}
+                  href={`/login?callbackUrl=/cursos/${slug}`}
                   className="rounded-full bg-gradient-to-r from-amber-500 to-amber-400 px-8 py-4 font-semibold text-black"
                 >
                   {session ? "Comprar Agora" : "Entrar para Comprar"}
-                  {course.price && ` — ${formatBRL(Number(course.price))}`}
+                  {priceLabel && ` — ${priceLabel}`}
                 </Link>
               )}
-              <Link href="/cursos" className="rounded-full border border-white/10 px-8 py-4 font-medium text-white/80 hover:text-white">
+              <Link
+                href="/cursos"
+                className="rounded-full border border-white/10 px-8 py-4 font-medium text-white/80 hover:text-white"
+              >
                 ← Ver todos os cursos
               </Link>
             </div>
@@ -366,6 +365,18 @@ export default async function CourseSalesPage({ params }: Props) {
         </section>
       )}
 
+      {/* ── FLOATING CTA ── */}
+      {showFloatingCta && (
+        <FloatingCta
+          slug={slug}
+          price={priceLabel}
+          isEnrolled={isEnrolled}
+          isWhatsappLead={course.isWhatsappLead}
+          whatsappUrl={whatsappUrl}
+          firstLessonId={firstLessonId}
+          hasSession={!!session}
+        />
+      )}
     </main>
   );
 }

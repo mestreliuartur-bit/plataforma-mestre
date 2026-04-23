@@ -229,10 +229,11 @@ model Course {
   category       CourseCategory @default(OUTROS)
   isPublished    Boolean        @default(false)
   price          Decimal?       @db.Decimal(10, 2)
-  isWhatsappLead Boolean        @default(false)
-  whatsappNumber String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  isWhatsappLead    Boolean        @default(false)
+  whatsappNumber    String?
+  landingPageConfig Json?          // configuração da landing page por curso
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   modules     Module[]
   enrollments UserEnrollment[]

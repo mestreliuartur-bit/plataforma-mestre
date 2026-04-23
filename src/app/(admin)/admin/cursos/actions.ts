@@ -24,6 +24,7 @@ export async function createCourse(formData: FormData) {
   const slug = (formData.get("slug") as string) || slugify(title);
 
   try {
+    const lpRaw = formData.get("landingPageConfig") as string | null;
     const course = await db.course.create({
       data: {
         title,
@@ -36,6 +37,7 @@ export async function createCourse(formData: FormData) {
         price: formData.get("price") ? parseFloat(formData.get("price") as string) : null,
         isWhatsappLead: formData.get("isWhatsappLead") === "true",
         whatsappNumber: (formData.get("whatsappNumber") as string) || null,
+        landingPageConfig: lpRaw ? JSON.parse(lpRaw) : undefined,
       },
     });
     revalidatePath("/admin/cursos");
@@ -53,6 +55,7 @@ export async function updateCourse(id: string, formData: FormData) {
   if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
 
   try {
+    const lpRaw = formData.get("landingPageConfig") as string | null;
     const course = await db.course.update({
       where: { id },
       data: {
@@ -66,6 +69,7 @@ export async function updateCourse(id: string, formData: FormData) {
         price: formData.get("price") ? parseFloat(formData.get("price") as string) : null,
         isWhatsappLead: formData.get("isWhatsappLead") === "true",
         whatsappNumber: (formData.get("whatsappNumber") as string) || null,
+        landingPageConfig: lpRaw ? JSON.parse(lpRaw) : undefined,
       },
     });
     revalidatePath("/admin/cursos");

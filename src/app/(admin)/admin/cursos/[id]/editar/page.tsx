@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { CourseForm } from "../../CourseForm";
 import { updateCourse } from "../../actions";
+import type { LandingPageConfig } from "@/types/landing-page";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -49,6 +50,7 @@ export default async function EditarCursoPage({ params }: Props) {
             price: course.price?.toString() ?? "",
             isWhatsappLead: course.isWhatsappLead,
             whatsappNumber: course.whatsappNumber ?? "",
+            landingPageConfig: (course.landingPageConfig ?? {}) as LandingPageConfig,
           }}
         />
       </div>
