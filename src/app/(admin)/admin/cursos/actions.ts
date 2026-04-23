@@ -74,7 +74,7 @@ export async function updateCourse(id: string, formData: FormData) {
     });
     revalidatePath("/admin/cursos");
     revalidatePath(`/cursos/${course.slug}`);
-    redirect("/admin/cursos");
+    return { success: true };
   } catch (e: unknown) {
     if ((e as { code?: string }).code === "P2002") {
       return { error: "Já existe um curso com este slug." };

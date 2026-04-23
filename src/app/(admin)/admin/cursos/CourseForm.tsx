@@ -90,6 +90,7 @@ export function CourseForm({ action, defaultValues = {}, submitLabel = "Criar Cu
   const formRef = useRef<HTMLFormElement>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const [slug, setSlug] = useState(defaultValues.slug ?? "");
   const [isPublished, setIsPublished] = useState(defaultValues.isPublished ?? false);
   const [isWhatsappLead, setIsWhatsappLead] = useState(defaultValues.isWhatsappLead ?? false);
@@ -124,7 +125,13 @@ export function CourseForm({ action, defaultValues = {}, submitLabel = "Criar Cu
 
     startTransition(async () => {
       const result = await action(formData);
-      if (result?.error) setError(result.error);
+      if (result?.error) {
+        setError(result.error);
+      } else {
+        setSaved(true);
+        router.refresh();
+        setTimeout(() => setSaved(false), 3000);
+      }
     });
   }
 
@@ -296,7 +303,11 @@ export function CourseForm({ action, defaultValues = {}, submitLabel = "Criar Cu
         <button
           type="submit"
           disabled={isPending}
-          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 px-6 py-3 text-sm font-semibold text-black disabled:opacity-60"
+          className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all disabled:opacity-60 ${
+            saved
+              ? "bg-emerald-600 text-white"
+              : "bg-gradient-to-r from-amber-500 to-amber-400 text-black"
+          }`}
         >
           {isPending ? (
             <>
@@ -306,6 +317,13 @@ export function CourseForm({ action, defaultValues = {}, submitLabel = "Criar Cu
               </svg>
               Salvando...
             </>
+          ) : saved ? (
+            <>
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              Salvo!
+            </>
           ) : submitLabel}
         </button>
         <button
@@ -313,7 +331,7 @@ export function CourseForm({ action, defaultValues = {}, submitLabel = "Criar Cu
           onClick={() => router.push("/admin/cursos")}
           className="rounded-xl border border-white/10 px-6 py-3 text-sm font-medium text-gray-400 transition-all hover:border-white/20 hover:text-white"
         >
-          Cancelar
+          ← Voltar para Cursos
         </button>
       </div>
     </form>
