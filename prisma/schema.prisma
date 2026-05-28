@@ -271,6 +271,46 @@ model Lesson {
   @@map("lessons")
 }
 
+// ─────────────────────────────────────────
+// CAMPAIGN PAGE (Funil de Tráfego Pago)
+// ─────────────────────────────────────────
+
+enum MediaType {
+  VIDEO
+  IMAGE
+}
+
+model CampaignPage {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  isActive    Boolean   @default(true)
+
+  // Hero
+  headline    String
+  subtitle    String?   @db.Text
+  mediaType   MediaType @default(IMAGE)
+  mediaUrl    String?   // YouTube embed URL ou Cloudinary public_id
+  ctaLabel    String    @default("Quero Participar Agora")
+  ctaUrl      String
+
+  // Autoridade
+  aboutImage  String?
+  aboutTitle  String?
+  aboutText   String?   @db.Text
+
+  // Depoimentos (array de objetos JSON)
+  testimonials Json?
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?  @db.Text
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("campaign_pages")
+}
+
 model UserEnrollment {
   id        String   @id @default(cuid())
   userId    String
