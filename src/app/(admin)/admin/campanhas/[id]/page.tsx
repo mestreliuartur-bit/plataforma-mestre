@@ -62,6 +62,8 @@ export default async function EditarCampanhaPage({ params }: Props) {
             testimonials,
             metaTitle: campaign.metaTitle ?? undefined,
             metaDescription: campaign.metaDescription ?? undefined,
+            pixelHead: campaign.pixelHead ?? undefined,
+            pixelBody: campaign.pixelBody ?? undefined,
           }}
         />
       </div>

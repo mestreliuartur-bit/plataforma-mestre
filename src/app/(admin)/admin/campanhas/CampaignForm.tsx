@@ -22,6 +22,8 @@ interface CampaignFormProps {
     testimonials?: string;
     metaTitle?: string;
     metaDescription?: string;
+    pixelHead?: string;
+    pixelBody?: string;
   };
   submitLabel?: string;
 }
@@ -45,6 +47,17 @@ export function CampaignForm({
   const [mediaType, setMediaType] = useState(defaultValues.mediaType ?? "IMAGE");
   const [aboutImage, setAboutImage] = useState(defaultValues.aboutImage ?? "");
 
+  function parseTestimonialsDefault() {
+    if (!defaultValues.testimonials) return [{ name: "", role: "", text: "" }];
+    try {
+      const parsed = JSON.parse(defaultValues.testimonials);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed.map((t: Record<string, string>) => ({ name: t.name ?? "", role: t.role ?? "", text: t.text ?? "" }));
+    } catch {}
+    return [{ name: "", role: "", text: "" }];
+  }
+
+  const [testimonials, setTestimonials] = useState<{ name: string; role: string; text: string }[]>(parseTestimonialsDefault);
+
   function handleHeadlineChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (!defaultValues.slug) setSlug(slugify(e.target.value));
   }
@@ -56,6 +69,8 @@ export function CampaignForm({
     formData.set("isActive", String(isActive));
     formData.set("mediaType", mediaType);
     formData.set("aboutImage", aboutImage);
+    const filledTestimonials = testimonials.filter((t) => t.name.trim() || t.text.trim());
+    formData.set("testimonials", filledTestimonials.length ? JSON.stringify(filledTestimonials) : "");
 
     startTransition(async () => {
       const result = await action(formData);
@@ -227,38 +242,110 @@ export function CampaignForm({
 
       {/* ── Seção 3: Depoimentos ── */}
       <section>
-        <SectionHeader index={3} title="Depoimentos (JSON)" />
-        <p className="mb-4 text-xs text-gray-500">
-          Cole um array JSON com os depoimentos. Campos:{" "}
-          <code className="text-amber-400/70">name</code>,{" "}
-          <code className="text-amber-400/70">role</code>,{" "}
-          <code className="text-amber-400/70">text</code>,{" "}
-          <code className="text-amber-400/70">avatarUrl</code>,{" "}
-          <code className="text-amber-400/70">videoUrl</code> (opcionais exceto name e text).
-        </p>
-        <textarea
-          name="testimonials"
-          defaultValue={
-            defaultValues.testimonials ||
-            `[
-  {
-    "name": "Maria Clara",
-    "role": "Empresária",
-    "text": "Após participar do ritual, minha vida mudou completamente..."
-  }
-]`
-          }
-          rows={10}
-          spellCheck={false}
-          className={`${inputClass} font-mono text-xs`}
-        />
+        <SectionHeader index={3} title="Depoimentos" />
+        <div className="space-y-4">
+          {testimonials.map((t, i) => (
+            <div key={i} className="relative rounded-xl border border-white/10 bg-white/[0.03] p-4 space-y-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-semibold uppercase tracking-wider text-amber-400/70">Depoimento {i + 1}</span>
+                {testimonials.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setTestimonials((prev) => prev.filter((_, idx) => idx !== i))}
+                    className="text-xs text-red-400/70 hover:text-red-400 transition-colors"
+                  >
+                    Remover
+                  </button>
+                )}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className={labelClass}>Nome *</label>
+                  <input
+                    value={t.name}
+                    onChange={(e) => setTestimonials((prev) => prev.map((x, idx) => idx === i ? { ...x, name: e.target.value } : x))}
+                    placeholder="Maria Clara"
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Cargo / Função</label>
+                  <input
+                    value={t.role}
+                    onChange={(e) => setTestimonials((prev) => prev.map((x, idx) => idx === i ? { ...x, role: e.target.value } : x))}
+                    placeholder="Empresária"
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className={labelClass}>Depoimento *</label>
+                <textarea
+                  value={t.text}
+                  onChange={(e) => setTestimonials((prev) => prev.map((x, idx) => idx === i ? { ...x, text: e.target.value } : x))}
+                  placeholder="Após participar do ritual, minha vida mudou completamente..."
+                  rows={3}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setTestimonials((prev) => [...prev, { name: "", role: "", text: "" }])}
+            className="w-full rounded-xl border border-dashed border-white/20 py-3 text-sm text-gray-400 hover:border-amber-400/40 hover:text-amber-400/70 transition-colors"
+          >
+            + Adicionar depoimento
+          </button>
+        </div>
       </section>
 
       <div className="border-t border-white/5" />
 
-      {/* ── Seção 4: SEO + Status ── */}
+      {/* ── Seção 4: Rastreamento & Pixels ── */}
       <section>
-        <SectionHeader index={4} title="SEO & Configurações" />
+        <SectionHeader index={4} title="Rastreamento & Pixels" />
+        <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-400/20 bg-amber-400/5 px-4 py-3">
+          <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+          <p className="text-xs text-amber-300/80">
+            Apenas códigos de rastreamento válidos devem ser inseridos aqui. Eles serão renderizados diretamente na landing page sem nenhum filtro — cole somente snippets fornecidos por plataformas confiáveis (Facebook, Google, TikTok, etc.).
+          </p>
+        </div>
+        <div className="space-y-5">
+          <div>
+            <label className={labelClass}>Pixel — Código do &lt;head&gt;</label>
+            <p className="mb-2 text-xs text-gray-500">Cole aqui o bloco <code className="text-amber-400/70">&lt;script&gt;...&lt;/script&gt;</code> fornecido pela plataforma de anúncios (Facebook Pixel base code, Google Tag Manager, TikTok Pixel, etc.)</p>
+            <textarea
+              name="pixelHead"
+              defaultValue={defaultValues.pixelHead}
+              rows={8}
+              spellCheck={false}
+              placeholder={`<!-- Exemplo: Facebook Pixel -->\n<script>\n  !function(f,b,e,v,n,t,s){...}(window, document,'script',\n  'https://connect.facebook.net/en_US/fbevents.js');\n  fbq('init', 'SEU_PIXEL_ID');\n  fbq('track', 'PageView');\n</script>`}
+              className={`${inputClass} font-mono text-xs`}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Pixel — Código do &lt;body&gt; (noscript)</label>
+            <p className="mb-2 text-xs text-gray-500">Cole aqui a tag <code className="text-amber-400/70">&lt;noscript&gt;...&lt;/noscript&gt;</code> que fica logo após a abertura do body (usada como fallback quando JavaScript está desabilitado).</p>
+            <textarea
+              name="pixelBody"
+              defaultValue={defaultValues.pixelBody}
+              rows={5}
+              spellCheck={false}
+              placeholder={`<!-- Exemplo: Facebook Pixel noscript -->\n<noscript>\n  <img height="1" width="1" style="display:none"\n    src="https://www.facebook.com/tr?id=SEU_PIXEL_ID&ev=PageView&noscript=1"/>\n</noscript>`}
+              className={`${inputClass} font-mono text-xs`}
+            />
+          </div>
+        </div>
+      </section>
+
+      <div className="border-t border-white/5" />
+
+      {/* ── Seção 5: SEO + Status ── */}
+      <section>
+        <SectionHeader index={5} title="SEO & Configurações" />
         <div className="space-y-5">
           <div className="grid gap-5 sm:grid-cols-2">
             <div>

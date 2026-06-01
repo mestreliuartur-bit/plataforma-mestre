@@ -305,6 +305,10 @@ model CampaignPage {
   metaTitle       String?
   metaDescription String?  @db.Text
 
+  // Pixels de Rastreamento
+  pixelHead       String?  @db.Text  // Scripts para injetar no <head>
+  pixelBody       String?  @db.Text  // Noscript/tags para injetar no início do <body>
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

@@ -5,6 +5,7 @@ import { CampaignHero } from "./_components/CampaignHero";
 import { AuthoritySection } from "./_components/AuthoritySection";
 import { TestimonialsSection } from "./_components/TestimonialsSection";
 import { FinalCTA } from "./_components/FinalCTA";
+import { PixelInjector } from "./_components/PixelInjector";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -40,6 +41,8 @@ export default async function CampaignPage({ params }: Props) {
 
   return (
     <main className="bg-[#0a0a0f]">
+      <PixelInjector pixelHead={campaign.pixelHead} pixelBody={campaign.pixelBody} />
+
       <CampaignHero
         headline={campaign.headline}
         subtitle={campaign.subtitle}

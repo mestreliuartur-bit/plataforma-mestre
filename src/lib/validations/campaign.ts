@@ -26,6 +26,9 @@ export const campaignSchema = z.object({
 
   metaTitle: z.string().max(70).optional(),
   metaDescription: z.string().max(160).optional(),
+
+  pixelHead: z.string().optional(),
+  pixelBody: z.string().optional(),
 });
 
 export type CampaignInput = z.infer<typeof campaignSchema>;

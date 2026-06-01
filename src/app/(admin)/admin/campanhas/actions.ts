@@ -23,6 +23,8 @@ function parseFormData(formData: FormData) {
     testimonials: (formData.get("testimonials") as string) || undefined,
     metaTitle: (formData.get("metaTitle") as string) || undefined,
     metaDescription: (formData.get("metaDescription") as string) || undefined,
+    pixelHead: (formData.get("pixelHead") as string) || undefined,
+    pixelBody: (formData.get("pixelBody") as string) || undefined,
   };
   return raw;
 }
@@ -66,6 +68,8 @@ export async function createCampaign(formData: FormData) {
         testimonials: testimonials ?? undefined,
         metaTitle: data.metaTitle ?? null,
         metaDescription: data.metaDescription ?? null,
+        pixelHead: data.pixelHead ?? null,
+        pixelBody: data.pixelBody ?? null,
       },
     });
   } catch (e: unknown) {
@@ -120,6 +124,8 @@ export async function updateCampaign(id: string, formData: FormData) {
         testimonials: testimonials ?? undefined,
         metaTitle: data.metaTitle ?? null,
         metaDescription: data.metaDescription ?? null,
+        pixelHead: data.pixelHead ?? null,
+        pixelBody: data.pixelBody ?? null,
       },
     });
   } catch (e: unknown) {
