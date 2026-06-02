@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Cinzel } from "next/font/google";
+import Script from "next/script";
 import { Providers } from "@/components/layout/Providers";
 import "./globals.css";
 
@@ -35,6 +36,20 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${inter.variable} ${cinzel.variable} dark`}>
+      <head>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-P2KFNKKWN2"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-P2KFNKKWN2');
+          `}
+        </Script>
+      </head>
       <body className="bg-[#0a0a0f] font-sans text-white antialiased">
         <Providers>{children}</Providers>
 
