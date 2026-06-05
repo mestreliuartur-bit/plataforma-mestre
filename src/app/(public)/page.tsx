@@ -1,8 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 import { db } from "@/lib/db";
 import { HeroSection } from "./_components/HeroSection";
 
-export const dynamic = "force-dynamic";
+// ISR: página cacheada na borda, revalidada a cada 60s.
+// Remove o custo de DB + SSR em cada request — maior ganho de TTFB.
+export const revalidate = 60;
 
 // Server Component — sem "use client", sem hydration issues
 
@@ -172,13 +175,14 @@ export default async function HomePage() {
                   {/* Capa */}
                   <div className="relative h-52 overflow-hidden bg-gradient-to-br from-purple-950 to-gray-900">
                     {event.coverImage ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <Image
                         src={event.coverImage.startsWith("http")
                           ? event.coverImage
                           : `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/c_fill,ar_16:9,q_auto,f_auto/${event.coverImage}`}
                         alt={event.title}
-                        className="h-full w-full object-cover opacity-60 transition-transform duration-500 group-hover:scale-105"
+                        fill
+                        className="object-cover opacity-60 transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center opacity-20">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface Banner {
   id: string;
@@ -10,44 +11,6 @@ interface Banner {
   imageUrl: string;
   ctaLabel: string;
   ctaUrl: string;
-}
-
-// Pseudo-random determinístico — mesmo valor no server e no client
-function seededRandom(seed: number): number {
-  const x = Math.sin(seed + 1) * 10000;
-  return x - Math.floor(x);
-}
-
-function StarField() {
-  const stars = Array.from({ length: 60 }, (_, i) => ({
-    id: i,
-    top: `${seededRandom(i * 5 + 0) * 100}%`,
-    left: `${seededRandom(i * 5 + 1) * 100}%`,
-    size: seededRandom(i * 5 + 2) * 2 + 1,
-    delay: `${seededRandom(i * 5 + 3) * 4}s`,
-    duration: `${seededRandom(i * 5 + 4) * 3 + 2}s`,
-    opacity: seededRandom(i * 5 + 5) * 0.4 + 0.1,
-  }));
-
-  return (
-    <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
-      {stars.map((star) => (
-        <div
-          key={star.id}
-          className="absolute animate-pulse rounded-full bg-white"
-          style={{
-            top: star.top,
-            left: star.left,
-            width: star.size,
-            height: star.size,
-            opacity: star.opacity,
-            animationDelay: star.delay,
-            animationDuration: star.duration,
-          }}
-        />
-      ))}
-    </div>
-  );
 }
 
 export function HeroSection({ banners }: { banners: Banner[] }) {
@@ -79,20 +42,35 @@ export function HeroSection({ banners }: { banners: Banner[] }) {
   const banner = banners[current];
   if (!banner) return null;
 
+  // Só o primeiro slide recebe priority — é o LCP element na carga inicial
+  const isFirst = current === 0;
+
   return (
     <section className="relative h-screen min-h-[680px] max-h-[900px] overflow-hidden bg-[#0a0a0f]">
       <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0f] via-[#120d1f] to-[#0a0a0f]" />
 
-      <StarField />
+      {/*
+        StarField substituído por CSS puro.
+        60 divs animados com animate-pulse causavam recalcs constantes
+        na main thread — impacto direto no TBT e INP.
+        CSS @keyframes roda na compositor thread sem bloquear o JS.
+      */}
+      <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden" aria-hidden="true">
+        <div className="hero-stars" />
+      </div>
 
-      {/* Imagem de fundo */}
+      {/* Imagem de fundo — next/image com fill para preload correto */}
       <div className={`absolute inset-0 transition-opacity duration-700 ${isTransitioning ? "opacity-0" : "opacity-100"}`}>
         <div className="absolute inset-0 z-10 bg-gradient-to-r from-[#0a0a0f] via-[#0a0a0f]/70 to-transparent" />
         <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#0a0a0f] via-transparent to-transparent" />
         {banner.imageUrl && (
-          <div
-            className="absolute inset-0 bg-cover bg-center opacity-30"
-            style={{ backgroundImage: `url(${banner.imageUrl})` }}
+          <Image
+            src={banner.imageUrl}
+            alt=""
+            fill
+            className="object-cover opacity-30"
+            priority={isFirst}
+            sizes="100vw"
             aria-hidden="true"
           />
         )}
@@ -101,12 +79,11 @@ export function HeroSection({ banners }: { banners: Banner[] }) {
       <div className="absolute right-1/4 top-1/3 z-10 h-[500px] w-[500px] -translate-y-1/2 translate-x-1/2 rounded-full bg-purple-900/20 blur-[120px]" />
       <div className="absolute left-1/3 top-2/3 z-10 h-[300px] w-[300px] -translate-x-1/2 rounded-full bg-amber-900/10 blur-[80px]" />
 
-      {/* Conteúdo do Hero */}
+      {/* Conteúdo */}
       <div className="relative z-20 flex h-full items-center">
         <div className="mx-auto w-full max-w-7xl px-6 lg:px-12">
           <div className="grid items-center gap-10 lg:grid-cols-2">
 
-            {/* ── Coluna esquerda: texto ── */}
             <div>
               <div className={`mb-6 inline-flex items-center gap-2 transition-all duration-500 ${isTransitioning ? "translate-y-4 opacity-0" : "translate-y-0 opacity-100"}`}>
                 <span className="h-px w-8 bg-amber-400/60" />
@@ -149,18 +126,24 @@ export function HeroSection({ banners }: { banners: Banner[] }) {
               </div>
             </div>
 
-            {/* ── Coluna direita: imagem destacada ── */}
+            {/* Imagem destaque — portrait do banner */}
             {banner.imageUrl && (
               <div className={`hidden lg:flex justify-end transition-all duration-500 delay-200 ${isTransitioning ? "translate-y-4 opacity-0" : "translate-y-0 opacity-100"}`}>
                 <div className="relative">
-                  {/* Brilho atrás da imagem */}
                   <div className="absolute -inset-4 rounded-2xl bg-amber-400/10 blur-2xl" />
-                  <img
+                  {/*
+                    width/height explícitos + sizes correto → Next.js gera srcset preciso.
+                    priority no primeiro slide → <link rel="preload"> no <head> da resposta SSR.
+                  */}
+                  <Image
                     src={banner.imageUrl}
                     alt={banner.title}
-                    className="relative h-[480px] w-[340px] rounded-xl object-cover shadow-2xl shadow-black/60 ring-1 ring-white/10"
+                    width={340}
+                    height={480}
+                    className="relative rounded-xl object-cover shadow-2xl shadow-black/60 ring-1 ring-white/10"
+                    priority={isFirst}
+                    sizes="340px"
                   />
-                  {/* Gradiente inferior suave */}
                   <div className="absolute inset-x-0 bottom-0 h-24 rounded-b-xl bg-gradient-to-t from-black/40 to-transparent" />
                 </div>
               </div>
@@ -170,7 +153,6 @@ export function HeroSection({ banners }: { banners: Banner[] }) {
         </div>
       </div>
 
-      {/* Navegação do carrossel */}
       {banners.length > 1 && (
         <>
           <div className="absolute bottom-10 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3">

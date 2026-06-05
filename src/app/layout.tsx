@@ -37,11 +37,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={`${inter.variable} ${cinzel.variable} dark`}>
       <head>
+        {/*
+          lazyOnload: carrega depois que todo o conteúdo da página terminou de renderizar.
+          Não compete com LCP, FCP ou recursos críticos. Ideal para analytics.
+          Use afterInteractive apenas se precisar disparar eventos antes do idle.
+        */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-P2KFNKKWN2"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
-        <Script id="google-analytics" strategy="afterInteractive">
+        <Script id="google-analytics" strategy="lazyOnload">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
