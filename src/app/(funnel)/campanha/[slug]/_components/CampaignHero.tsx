@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { YouTubeFacade } from "./YouTubeFacade";
 
 interface CampaignHeroProps {
   headline: string;
@@ -23,22 +24,16 @@ export function CampaignHero({
   return (
     <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#0a0a0f] px-4 py-20">
       {/* Ambient glow background */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 z-0"
-      >
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute left-1/2 top-0 h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-amber-500/5 blur-[120px]" />
         <div className="absolute bottom-0 left-0 h-[400px] w-[600px] rounded-full bg-purple-900/10 blur-[100px]" />
-        <StarField />
+        {/* StarField CSS puro — substitui 50 divs animados na main thread */}
+        <div className="hero-stars absolute inset-0" />
       </div>
 
       {/* Sigil ornament */}
       <div aria-hidden className="relative z-10 mb-8">
-        <svg
-          viewBox="0 0 100 100"
-          className="mx-auto h-12 w-12 text-amber-400/40"
-          fill="currentColor"
-        >
+        <svg viewBox="0 0 100 100" className="mx-auto h-12 w-12 text-amber-400/40" fill="currentColor">
           <polygon points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" />
         </svg>
       </div>
@@ -61,17 +56,18 @@ export function CampaignHero({
           <div className="overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/60">
             {mediaType === "VIDEO" ? (
               <div className="aspect-video w-full">
-                <iframe
-                  src={youtubeEmbedUrl(mediaUrl)}
-                  title="Vídeo de apresentação"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  loading="lazy"
-                  className="h-full w-full"
+                {/*
+                  YouTubeFacade: exibe thumbnail estática até o clique.
+                  Evita carregar ~300KB de JS do YouTube + 4 cookies de terceiros
+                  durante a renderização inicial — impacto direto no TBT e LCP.
+                */}
+                <YouTubeFacade
+                  videoId={extractYouTubeId(mediaUrl)}
+                  title={headline}
                 />
               </div>
             ) : (
-              <div className="aspect-video relative w-full">
+              <div className="relative aspect-video w-full">
                 <Image
                   src={
                     mediaUrl.startsWith("http")
@@ -101,7 +97,7 @@ export function CampaignHero({
   );
 }
 
-// ── CTA Button with pulse animation ──────────────────────────
+// ── CTA Button ────────────────────────────────────────────────
 
 export function CtaButton({ label, href }: { label: string; href: string }) {
   return (
@@ -109,72 +105,21 @@ export function CtaButton({ label, href }: { label: string; href: string }) {
       href={href}
       className="group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl bg-amber-400 px-10 py-5 font-serif text-lg font-bold text-black shadow-lg shadow-amber-400/30 transition-all duration-300 hover:bg-amber-300 hover:shadow-xl hover:shadow-amber-400/40 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
     >
-      {/* Pulsing ring */}
-      <span
-        aria-hidden
-        className="absolute inset-0 rounded-2xl ring-2 ring-amber-400/50 animate-ping opacity-30"
-      />
-      <svg
-        className="h-5 w-5 flex-shrink-0 transition-transform group-hover:translate-x-0.5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2.5}
-          d="M13 7l5 5m0 0l-5 5m5-5H6"
-        />
+      <span aria-hidden className="absolute inset-0 rounded-2xl ring-2 ring-amber-400/50 animate-ping opacity-30" />
+      <svg className="h-5 w-5 flex-shrink-0 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
       </svg>
       {label}
     </Link>
   );
 }
 
-// ── Helpers ──────────────────────────────────────────────────
+// ── Helper ────────────────────────────────────────────────────
 
-function youtubeEmbedUrl(url: string): string {
-  // Suporta https://youtu.be/ID e https://www.youtube.com/watch?v=ID
+function extractYouTubeId(url: string): string {
   const match =
     url.match(/youtu\.be\/([^?&]+)/) ||
     url.match(/[?&]v=([^&]+)/) ||
     url.match(/embed\/([^?&]+)/);
-  const id = match ? match[1] : url;
-  return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1`;
-}
-
-function StarField() {
-  const stars = Array.from({ length: 50 }, (_, i) => {
-    const s = (n: number) => {
-      const x = Math.sin(n + 1) * 10000;
-      return x - Math.floor(x);
-    };
-    return {
-      id: i,
-      top: `${s(i * 5) * 100}%`,
-      left: `${s(i * 5 + 1) * 100}%`,
-      size: s(i * 5 + 2) * 1.5 + 0.5,
-      delay: `${s(i * 5 + 3) * 5}s`,
-      duration: `${s(i * 5 + 4) * 3 + 2}s`,
-    };
-  });
-  return (
-    <>
-      {stars.map((star) => (
-        <div
-          key={star.id}
-          className="absolute animate-pulse rounded-full bg-white/30"
-          style={{
-            top: star.top,
-            left: star.left,
-            width: star.size,
-            height: star.size,
-            animationDelay: star.delay,
-            animationDuration: star.duration,
-          }}
-        />
-      ))}
-    </>
-  );
+  return match ? match[1] : url;
 }

@@ -19,6 +19,9 @@ const cinzel = Cinzel({
 });
 
 export const metadata: Metadata = {
+  // metadataBase é obrigatório para que OG tags e canonicals gerem URLs absolutas corretas.
+  // Sem isso, o Next.js emite warnings e os crawlers recebem paths relativos.
+  metadataBase: new URL("https://www.mestreliuartur.com"),
   title: {
     default: "Mestre Liu Artur — Rituais & Eventos Esotéricos",
     template: "%s | Mestre Liu Artur",

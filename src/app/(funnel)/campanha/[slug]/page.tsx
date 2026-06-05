@@ -21,14 +21,35 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const campaign = await getCampaign(slug);
   if (!campaign) return {};
+
+  const title = campaign.metaTitle ?? campaign.headline;
+  const description = campaign.metaDescription ?? campaign.subtitle ?? undefined;
+
   return {
-    title: campaign.metaTitle ?? campaign.headline,
-    description: campaign.metaDescription ?? campaign.subtitle ?? undefined,
-    robots: { index: false, follow: false }, // páginas de funil não são indexadas
+    title,
+    description,
+    // OG tags: necessário para preview correto no WhatsApp, Facebook, etc.
+    // metadataBase definido em layout.tsx resolve os paths relativos.
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      locale: "pt_BR",
+      url: `/campanha/${slug}`,
+    },
+    // Canonical: evita penalidade de conteúdo duplicado se a página for acessada
+    // por múltiplos paths (ex: com e sem www, com query strings, etc.)
+    alternates: {
+      canonical: `/campanha/${slug}`,
+    },
+    // robots: removido — páginas de campanha devem ser indexadas para SEO orgânico.
+    // Se precisar bloquear uma campanha específica, adicione o campo noindex ao modelo.
   };
 }
 
-export const dynamic = "force-dynamic";
+// ISR: cache de 5 minutos. O conteúdo da campanha raramente muda durante uma
+// veiculação ativa de anúncios. Remove o custo de DB em cada request.
+export const revalidate = 300;
 
 export default async function CampaignPage({ params }: Props) {
   const { slug } = await params;

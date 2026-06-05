@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      // Thumbnails do YouTube para a facade de vídeo (evita carregar o iframe diretamente)
+      { protocol: "https", hostname: "i.ytimg.com" },
     ],
   },
 };
