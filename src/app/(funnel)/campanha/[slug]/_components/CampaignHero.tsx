@@ -11,6 +11,7 @@ interface CampaignHeroProps {
   mediaUrl?: string | null;
   ctaLabel: string;
   ctaUrl: string;
+  campaignSlug: string;
 }
 
 export function CampaignHero({
@@ -20,6 +21,7 @@ export function CampaignHero({
   mediaUrl,
   ctaLabel,
   ctaUrl,
+  campaignSlug,
 }: CampaignHeroProps) {
   return (
     <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#0a0a0f] px-4 py-20">
@@ -88,7 +90,7 @@ export function CampaignHero({
 
       {/* CTA Button */}
       <div className="relative z-10 mt-12">
-        <CtaButton label={ctaLabel} href={ctaUrl} />
+        <CtaButton label={ctaLabel} href={ctaUrl} campaignSlug={campaignSlug} />
         <p className="mt-4 text-center text-xs text-gray-600">
           Acesso imediato · Sem riscos
         </p>
@@ -99,10 +101,25 @@ export function CampaignHero({
 
 // ── CTA Button ────────────────────────────────────────────────
 
-export function CtaButton({ label, href }: { label: string; href: string }) {
+export function CtaButton({
+  label,
+  href,
+  campaignSlug,
+}: {
+  label: string;
+  href: string;
+  campaignSlug?: string;
+}) {
+  function handleClick() {
+    if (campaignSlug) {
+      fetch(`/api/campanha/${campaignSlug}/cta-click`, { method: "POST" }).catch(() => {});
+    }
+  }
+
   return (
     <Link
       href={href}
+      onClick={handleClick}
       className="group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl bg-amber-400 px-10 py-5 font-serif text-lg font-bold text-black shadow-lg shadow-amber-400/30 transition-all duration-300 hover:bg-amber-300 hover:shadow-xl hover:shadow-amber-400/40 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
     >
       <span aria-hidden className="absolute inset-0 rounded-2xl ring-2 ring-amber-400/50 animate-ping opacity-30" />

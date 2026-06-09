@@ -3,9 +3,10 @@ import { CtaButton } from "./CampaignHero";
 interface FinalCTAProps {
   ctaLabel: string;
   ctaUrl: string;
+  campaignSlug: string;
 }
 
-export function FinalCTA({ ctaLabel, ctaUrl }: FinalCTAProps) {
+export function FinalCTA({ ctaLabel, ctaUrl, campaignSlug }: FinalCTAProps) {
   return (
     <section className="relative overflow-hidden bg-[#0a0a0f] py-28">
       {/* Ambient glow */}
@@ -43,7 +44,7 @@ export function FinalCTA({ ctaLabel, ctaUrl }: FinalCTAProps) {
         </p>
 
         <div className="mt-12 flex flex-col items-center gap-4">
-          <CtaButton label={ctaLabel} href={ctaUrl} />
+          <CtaButton label={ctaLabel} href={ctaUrl} campaignSlug={campaignSlug} />
           <p className="text-xs text-gray-700">
             Acesso seguro · Suporte dedicado · Satisfação garantida
           </p>

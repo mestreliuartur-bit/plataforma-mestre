@@ -71,6 +71,7 @@ export default async function CampaignPage({ params }: Props) {
         mediaUrl={campaign.mediaUrl}
         ctaLabel={campaign.ctaLabel}
         ctaUrl={campaign.ctaUrl}
+        campaignSlug={campaign.slug}
       />
 
       <AuthoritySection
@@ -81,7 +82,7 @@ export default async function CampaignPage({ params }: Props) {
 
       <TestimonialsSection testimonials={testimonials} />
 
-      <FinalCTA ctaLabel={campaign.ctaLabel} ctaUrl={campaign.ctaUrl} />
+      <FinalCTA ctaLabel={campaign.ctaLabel} ctaUrl={campaign.ctaUrl} campaignSlug={campaign.slug} />
     </main>
   );
 }

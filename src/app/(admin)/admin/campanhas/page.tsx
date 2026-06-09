@@ -37,8 +37,8 @@ export default async function CampanhasPage() {
         <StatCard label="Ativas" value={campaigns.filter((c) => c.isActive).length} highlight />
         <StatCard label="Inativas" value={campaigns.filter((c) => !c.isActive).length} />
         <StatCard
-          label="Com Vídeo"
-          value={campaigns.filter((c) => c.mediaType === "VIDEO").length}
+          label="Cliques CTA"
+          value={campaigns.reduce((sum, c) => sum + c.ctaClicks, 0)}
         />
       </div>
 
@@ -64,6 +64,7 @@ export default async function CampanhasPage() {
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Headline</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Slug</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Mídia</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Cliques CTA</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Status</th>
                 <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Ações</th>
               </tr>
@@ -85,6 +86,9 @@ export default async function CampanhasPage() {
                     }`}>
                       {c.mediaType}
                     </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="font-semibold text-amber-400">{c.ctaClicks.toLocaleString("pt-BR")}</span>
                   </td>
                   <td className="px-6 py-4">
                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${

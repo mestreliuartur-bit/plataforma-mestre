@@ -309,6 +309,9 @@ model CampaignPage {
   pixelHead       String?  @db.Text  // Scripts para injetar no <head>
   pixelBody       String?  @db.Text  // Noscript/tags para injetar no início do <body>
 
+  // Métricas
+  ctaClicks   Int       @default(0)
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
