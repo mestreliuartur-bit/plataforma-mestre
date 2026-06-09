@@ -35,11 +35,8 @@ export default async function CampanhasPage() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard label="Total" value={campaigns.length} />
         <StatCard label="Ativas" value={campaigns.filter((c) => c.isActive).length} highlight />
-        <StatCard label="Inativas" value={campaigns.filter((c) => !c.isActive).length} />
-        <StatCard
-          label="Cliques CTA"
-          value={campaigns.reduce((sum, c) => sum + c.ctaClicks, 0)}
-        />
+        <StatCard label="Views" value={campaigns.reduce((sum, c) => sum + c.views, 0)} />
+        <StatCard label="Cliques CTA" value={campaigns.reduce((sum, c) => sum + c.ctaClicks, 0)} />
       </div>
 
       {/* Table */}
@@ -64,6 +61,7 @@ export default async function CampanhasPage() {
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Headline</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Slug</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Mídia</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Views</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Cliques CTA</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Status</th>
                 <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Ações</th>
@@ -86,6 +84,9 @@ export default async function CampanhasPage() {
                     }`}>
                       {c.mediaType}
                     </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="font-semibold text-blue-400">{c.views.toLocaleString("pt-BR")}</span>
                   </td>
                   <td className="px-6 py-4">
                     <span className="font-semibold text-amber-400">{c.ctaClicks.toLocaleString("pt-BR")}</span>

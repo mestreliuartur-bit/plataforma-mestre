@@ -18,12 +18,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     select: { title: true, description: true, coverImage: true },
   });
   if (!course) return {};
+  const description = course.description.slice(0, 160);
   return {
     title: course.title,
-    description: course.description.slice(0, 160),
+    description,
+    alternates: { canonical: `/cursos/${slug}` },
     openGraph: {
       title: course.title,
-      description: course.description.slice(0, 160),
+      description,
       images: course.coverImage ? [course.coverImage] : [],
     },
   };

@@ -1,8 +1,16 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Cursos Esotéricos",
+  description: "Aprofunde-se no mundo espiritual com os cursos online do Mestre Liu Artur — Umbanda, Magia, Rituais, Astrologia e muito mais.",
+  alternates: { canonical: "/cursos" },
+  openGraph: { title: "Cursos Esotéricos | Mestre Liu Artur", description: "Cursos online de Umbanda, Magia, Rituais e Espiritualidade." },
+};
 
 const CATEGORY_LABELS: Record<string, string> = {
   UMBANDA: "Umbanda",

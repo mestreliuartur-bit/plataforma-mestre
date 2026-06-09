@@ -1,7 +1,15 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { EventCarousel, type CarouselEvent } from "@/components/EventCarousel";
+
+export const metadata: Metadata = {
+  title: "Rituais & Eventos Esotéricos",
+  description: "Participe dos rituais e eventos presenciais e à distância com o Mestre Liu Artur. Prosperidade, limpeza espiritual, amor e muito mais.",
+  alternates: { canonical: "/eventos" },
+  openGraph: { title: "Rituais & Eventos | Mestre Liu Artur", description: "Rituais presenciais e à distância de umbanda, magia e espiritualidade." },
+};
 
 // ─────────────────────────────────────────
 // COURSE ROW — Treinamentos & Cursos

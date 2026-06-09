@@ -310,6 +310,7 @@ model CampaignPage {
   pixelBody       String?  @db.Text  // Noscript/tags para injetar no início do <body>
 
   // Métricas
+  views       Int       @default(0)
   ctaClicks   Int       @default(0)
 
   createdAt   DateTime  @default(now())

@@ -11,11 +11,21 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const event = await db.event.findUnique({ where: { slug }, select: { title: true, description: true } });
+  const event = await db.event.findUnique({
+    where: { slug },
+    select: { title: true, description: true, coverImage: true },
+  });
   if (!event) return {};
+  const description = event.description.slice(0, 160);
   return {
     title: event.title,
-    description: event.description.slice(0, 160),
+    description,
+    alternates: { canonical: `/eventos/${slug}` },
+    openGraph: {
+      title: event.title,
+      description,
+      images: event.coverImage ? [event.coverImage] : [],
+    },
   };
 }
 
