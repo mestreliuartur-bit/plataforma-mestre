@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { campaignSchema } from "@/lib/validations/campaign";
 import { slugify } from "@/lib/validations/event";
+import { logAudit } from "@/lib/audit";
 
 function parseFormData(formData: FormData) {
   const raw = {
@@ -31,7 +32,7 @@ function parseFormData(formData: FormData) {
 
 export async function createCampaign(formData: FormData) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "SUPERADMIN") throw new Error("Sem permissão");
 
   const raw = parseFormData(formData);
   const parsed = campaignSchema.safeParse(raw);
@@ -51,8 +52,9 @@ export async function createCampaign(formData: FormData) {
     }
   }
 
+  let campaign;
   try {
-    await db.campaignPage.create({
+    campaign = await db.campaignPage.create({
       data: {
         slug: data.slug,
         isActive: data.isActive,
@@ -80,13 +82,22 @@ export async function createCampaign(formData: FormData) {
     return { error: "Erro ao criar campanha" };
   }
 
+  await logAudit({
+    userId: session.user.id,
+    userName: session.user.name ?? session.user.email ?? "Admin",
+    action: "CREATE",
+    entity: "CampaignPage",
+    entityId: campaign.id,
+    label: `Campanha "${campaign.headline}"`,
+  });
+
   revalidatePath("/admin/campanhas");
   redirect("/admin/campanhas");
 }
 
 export async function updateCampaign(id: string, formData: FormData) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "SUPERADMIN") throw new Error("Sem permissão");
 
   const raw = parseFormData(formData);
   const parsed = campaignSchema.safeParse(raw);
@@ -106,8 +117,9 @@ export async function updateCampaign(id: string, formData: FormData) {
     }
   }
 
+  let campaign;
   try {
-    await db.campaignPage.update({
+    campaign = await db.campaignPage.update({
       where: { id },
       data: {
         slug: data.slug,
@@ -136,14 +148,31 @@ export async function updateCampaign(id: string, formData: FormData) {
     return { error: "Erro ao atualizar campanha" };
   }
 
+  await logAudit({
+    userId: session.user.id,
+    userName: session.user.name ?? session.user.email ?? "Admin",
+    action: "UPDATE",
+    entity: "CampaignPage",
+    entityId: campaign.id,
+    label: `Campanha "${campaign.headline}"`,
+  });
+
   revalidatePath("/admin/campanhas");
   redirect("/admin/campanhas");
 }
 
 export async function deleteCampaign(id: string) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "SUPERADMIN") throw new Error("Sem permissão");
 
-  await db.campaignPage.delete({ where: { id } });
+  const campaign = await db.campaignPage.delete({ where: { id } });
+  await logAudit({
+    userId: session.user.id,
+    userName: session.user.name ?? session.user.email ?? "Admin",
+    action: "DELETE",
+    entity: "CampaignPage",
+    entityId: id,
+    label: `Campanha "${campaign.headline}"`,
+  });
   revalidatePath("/admin/campanhas");
 }

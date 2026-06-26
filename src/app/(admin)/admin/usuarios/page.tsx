@@ -99,7 +99,9 @@ export default async function AdminUsuariosPage() {
                     </td>
                     <td className="px-4 py-4">
                       <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${
-                        user.role === "ADMIN"
+                        user.role === "SUPERADMIN"
+                          ? "bg-red-900/40 text-red-400"
+                          : user.role === "ADMIN"
                           ? "bg-amber-900/40 text-amber-400"
                           : user.role === "MODERATOR"
                           ? "bg-sky-900/40 text-sky-400"

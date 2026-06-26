@@ -19,6 +19,7 @@ enum Role {
   MODERATOR
   COURSE_CREATOR
   ADMIN
+  SUPERADMIN
 }
 
 enum EventType {
@@ -72,8 +73,36 @@ model User {
   sessions    Session[]
   purchases   Purchase[]
   enrollments UserEnrollment[]
+  auditLogs   AuditLog[]
 
   @@map("users")
+}
+
+// ─────────────────────────────────────────
+// AUDIT LOG (histórico de ações no admin)
+// ─────────────────────────────────────────
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  userId    String
+  userName  String   // denormalizado: preserva o nome mesmo se o usuário for removido depois
+  action    AuditAction
+  entity    String      // "Course", "Module", "Lesson", "Event", "Banner", "CampaignPage", "User"
+  entityId  String
+  label     String      // descrição legível, ex: "Curso 'Tarot Iniciante'"
+  createdAt DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([entity, entityId])
+  @@index([userId])
+  @@map("audit_logs")
 }
 
 // ─────────────────────────────────────────

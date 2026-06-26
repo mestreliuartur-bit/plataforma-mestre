@@ -1,7 +1,11 @@
 import Link from "next/link";
+import { auth } from "@/auth";
 import { createUser } from "../actions";
 
-export default function NovoUsuarioPage() {
+export default async function NovoUsuarioPage() {
+  const session = await auth();
+  const isSuperAdmin = session?.user?.role === "SUPERADMIN";
+
   return (
     <div className="space-y-8 max-w-2xl">
       {/* ── Header ── */}
@@ -88,6 +92,7 @@ export default function NovoUsuarioPage() {
             <option value="MODERATOR">Moderador</option>
             <option value="COURSE_CREATOR">Criador de Cursos</option>
             <option value="ADMIN">Admin</option>
+            {isSuperAdmin && <option value="SUPERADMIN">Super Admin</option>}
           </select>
         </div>
 

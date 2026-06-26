@@ -5,10 +5,11 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { eventSchema, slugify } from "@/lib/validations/event";
+import { logAudit } from "@/lib/audit";
 
 export async function createEvent(formData: FormData) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "SUPERADMIN") throw new Error("Sem permissão");
 
   const isWhatsappLead = formData.get("isWhatsappLead") === "true";
 
@@ -38,8 +39,9 @@ export async function createEvent(formData: FormData) {
 
   const data = parsed.data;
 
+  let event;
   try {
-    await db.event.create({
+    event = await db.event.create({
       data: {
         title: data.title,
         slug: data.slug,
@@ -64,13 +66,22 @@ export async function createEvent(formData: FormData) {
     return { error: "Erro ao criar evento. Tente novamente." };
   }
 
+  await logAudit({
+    userId: session.user.id,
+    userName: session.user.name ?? session.user.email ?? "Admin",
+    action: "CREATE",
+    entity: "Event",
+    entityId: event.id,
+    label: `Evento "${event.title}"`,
+  });
+
   revalidatePath("/admin/eventos");
   redirect("/admin/eventos");
 }
 
 export async function updateEvent(id: string, formData: FormData) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "SUPERADMIN") throw new Error("Sem permissão");
 
   const isWhatsappLead = formData.get("isWhatsappLead") === "true";
 
@@ -100,8 +111,9 @@ export async function updateEvent(id: string, formData: FormData) {
 
   const data = parsed.data;
 
+  let event;
   try {
-    await db.event.update({
+    event = await db.event.update({
       where: { id },
       data: {
         title: data.title,
@@ -127,6 +139,15 @@ export async function updateEvent(id: string, formData: FormData) {
     return { error: "Erro ao atualizar evento." };
   }
 
+  await logAudit({
+    userId: session.user.id,
+    userName: session.user.name ?? session.user.email ?? "Admin",
+    action: "UPDATE",
+    entity: "Event",
+    entityId: event.id,
+    label: `Evento "${event.title}"`,
+  });
+
   revalidatePath("/admin/eventos");
   revalidatePath(`/eventos/${data.slug}`);
   redirect("/admin/eventos");
@@ -134,8 +155,16 @@ export async function updateEvent(id: string, formData: FormData) {
 
 export async function deleteEvent(id: string) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "SUPERADMIN") throw new Error("Sem permissão");
 
-  await db.event.delete({ where: { id } });
+  const event = await db.event.delete({ where: { id } });
+  await logAudit({
+    userId: session.user.id,
+    userName: session.user.name ?? session.user.email ?? "Admin",
+    action: "DELETE",
+    entity: "Event",
+    entityId: id,
+    label: `Evento "${event.title}"`,
+  });
   revalidatePath("/admin/eventos");
 }

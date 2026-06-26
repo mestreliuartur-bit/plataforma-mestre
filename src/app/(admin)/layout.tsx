@@ -10,7 +10,7 @@ export default async function AdminLayout({
   const session = await auth();
 
   // Dupla verificação além do middleware
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPERADMIN")) {
     redirect("/");
   }
 
@@ -19,6 +19,7 @@ export default async function AdminLayout({
       <AdminSidebar
         userName={session.user.name ?? "Admin"}
         userEmail={session.user.email ?? ""}
+        userRole={session.user.role}
       />
 
       <main className="flex-1 overflow-y-auto">

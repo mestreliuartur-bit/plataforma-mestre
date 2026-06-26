@@ -68,14 +68,28 @@ const navItems: NavItem[] = [
   },
 ];
 
+const superAdminNavItems: NavItem[] = [
+  {
+    label: "Logs",
+    href: "/admin/logs",
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.75v5.25l3.75 1.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
+];
+
 interface AdminSidebarProps {
   userName: string;
   userEmail: string;
+  userRole: string;
 }
 
-export function AdminSidebar({ userName, userEmail }: AdminSidebarProps) {
+export function AdminSidebar({ userName, userEmail, userRole }: AdminSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const items = userRole === "SUPERADMIN" ? [...navItems, ...superAdminNavItems] : navItems;
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
@@ -111,7 +125,7 @@ export function AdminSidebar({ userName, userEmail }: AdminSidebarProps) {
       {/* Navegação */}
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-6">
         <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-widest text-gray-600">Gestão</p>
-        {navItems.map((item) => {
+        {items.map((item) => {
           const isActive =
             item.href === "/admin"
               ? pathname === "/admin"

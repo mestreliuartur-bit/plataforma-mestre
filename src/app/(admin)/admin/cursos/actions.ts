@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { logAudit } from "@/lib/audit";
 
 function slugify(text: string) {
   return text
@@ -18,7 +19,7 @@ function slugify(text: string) {
 
 export async function createCourse(formData: FormData) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "SUPERADMIN") throw new Error("Sem permissão");
 
   const title = formData.get("title") as string;
   const slug = (formData.get("slug") as string) || slugify(title);
@@ -40,6 +41,14 @@ export async function createCourse(formData: FormData) {
         landingPageConfig: lpRaw ? JSON.parse(lpRaw) : undefined,
       },
     });
+    await logAudit({
+      userId: session.user.id,
+      userName: session.user.name ?? session.user.email ?? "Admin",
+      action: "CREATE",
+      entity: "Course",
+      entityId: course.id,
+      label: `Curso "${course.title}"`,
+    });
     revalidatePath("/admin/cursos");
     redirect(`/admin/cursos/${course.id}/modulos`);
   } catch (e: unknown) {
@@ -52,7 +61,7 @@ export async function createCourse(formData: FormData) {
 
 export async function updateCourse(id: string, formData: FormData) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "SUPERADMIN") throw new Error("Sem permissão");
 
   try {
     const lpRaw = formData.get("landingPageConfig") as string | null;
@@ -72,6 +81,14 @@ export async function updateCourse(id: string, formData: FormData) {
         landingPageConfig: lpRaw ? JSON.parse(lpRaw) : undefined,
       },
     });
+    await logAudit({
+      userId: session.user.id,
+      userName: session.user.name ?? session.user.email ?? "Admin",
+      action: "UPDATE",
+      entity: "Course",
+      entityId: course.id,
+      label: `Curso "${course.title}"`,
+    });
     revalidatePath("/admin/cursos");
     revalidatePath(`/cursos/${course.slug}`);
     return { success: true };
@@ -85,9 +102,17 @@ export async function updateCourse(id: string, formData: FormData) {
 
 export async function deleteCourse(id: string) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "SUPERADMIN") throw new Error("Sem permissão");
 
-  await db.course.delete({ where: { id } });
+  const course = await db.course.delete({ where: { id } });
+  await logAudit({
+    userId: session.user.id,
+    userName: session.user.name ?? session.user.email ?? "Admin",
+    action: "DELETE",
+    entity: "Course",
+    entityId: id,
+    label: `Curso "${course.title}"`,
+  });
   revalidatePath("/admin/cursos");
 }
 
@@ -95,16 +120,24 @@ export async function deleteCourse(id: string) {
 
 export async function createModule(courseId: string, formData: FormData) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "SUPERADMIN") throw new Error("Sem permissão");
 
   const count = await db.module.count({ where: { courseId } });
 
-  await db.module.create({
+  const module_ = await db.module.create({
     data: {
       title: formData.get("title") as string,
       order: count,
       courseId,
     },
+  });
+  await logAudit({
+    userId: session.user.id,
+    userName: session.user.name ?? session.user.email ?? "Admin",
+    action: "CREATE",
+    entity: "Module",
+    entityId: module_.id,
+    label: `Módulo "${module_.title}"`,
   });
 
   revalidatePath(`/admin/cursos/${courseId}/modulos`);
@@ -112,11 +145,19 @@ export async function createModule(courseId: string, formData: FormData) {
 
 export async function updateModule(id: string, courseId: string, formData: FormData) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "SUPERADMIN") throw new Error("Sem permissão");
 
-  await db.module.update({
+  const module_ = await db.module.update({
     where: { id },
     data: { title: formData.get("title") as string },
+  });
+  await logAudit({
+    userId: session.user.id,
+    userName: session.user.name ?? session.user.email ?? "Admin",
+    action: "UPDATE",
+    entity: "Module",
+    entityId: module_.id,
+    label: `Módulo "${module_.title}"`,
   });
 
   revalidatePath(`/admin/cursos/${courseId}/modulos`);
@@ -124,9 +165,17 @@ export async function updateModule(id: string, courseId: string, formData: FormD
 
 export async function deleteModule(id: string, courseId: string) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "SUPERADMIN") throw new Error("Sem permissão");
 
-  await db.module.delete({ where: { id } });
+  const module_ = await db.module.delete({ where: { id } });
+  await logAudit({
+    userId: session.user.id,
+    userName: session.user.name ?? session.user.email ?? "Admin",
+    action: "DELETE",
+    entity: "Module",
+    entityId: id,
+    label: `Módulo "${module_.title}"`,
+  });
   revalidatePath(`/admin/cursos/${courseId}/modulos`);
 }
 
@@ -134,11 +183,11 @@ export async function deleteModule(id: string, courseId: string) {
 
 export async function createLesson(moduleId: string, courseId: string, formData: FormData) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "SUPERADMIN") throw new Error("Sem permissão");
 
   const count = await db.lesson.count({ where: { moduleId } });
 
-  await db.lesson.create({
+  const lesson = await db.lesson.create({
     data: {
       title: formData.get("title") as string,
       description: (formData.get("description") as string) || null,
@@ -148,15 +197,23 @@ export async function createLesson(moduleId: string, courseId: string, formData:
       moduleId,
     },
   });
+  await logAudit({
+    userId: session.user.id,
+    userName: session.user.name ?? session.user.email ?? "Admin",
+    action: "CREATE",
+    entity: "Lesson",
+    entityId: lesson.id,
+    label: `Aula "${lesson.title}"`,
+  });
 
   revalidatePath(`/admin/cursos/${courseId}/modulos`);
 }
 
 export async function updateLesson(id: string, courseId: string, formData: FormData) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "SUPERADMIN") throw new Error("Sem permissão");
 
-  await db.lesson.update({
+  const lesson = await db.lesson.update({
     where: { id },
     data: {
       title: formData.get("title") as string,
@@ -165,15 +222,31 @@ export async function updateLesson(id: string, courseId: string, formData: FormD
       duration: formData.get("duration") ? parseInt(formData.get("duration") as string) : null,
     },
   });
+  await logAudit({
+    userId: session.user.id,
+    userName: session.user.name ?? session.user.email ?? "Admin",
+    action: "UPDATE",
+    entity: "Lesson",
+    entityId: lesson.id,
+    label: `Aula "${lesson.title}"`,
+  });
 
   revalidatePath(`/admin/cursos/${courseId}/modulos`);
 }
 
 export async function deleteLesson(id: string, courseId: string) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "SUPERADMIN") throw new Error("Sem permissão");
 
-  await db.lesson.delete({ where: { id } });
+  const lesson = await db.lesson.delete({ where: { id } });
+  await logAudit({
+    userId: session.user.id,
+    userName: session.user.name ?? session.user.email ?? "Admin",
+    action: "DELETE",
+    entity: "Lesson",
+    entityId: id,
+    label: `Aula "${lesson.title}"`,
+  });
   revalidatePath(`/admin/cursos/${courseId}/modulos`);
 }
 
@@ -181,12 +254,20 @@ export async function deleteLesson(id: string, courseId: string) {
 
 export async function enrollUser(userId: string, courseId: string) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") throw new Error("Sem permissão");
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "SUPERADMIN") throw new Error("Sem permissão");
 
   await db.userEnrollment.upsert({
     where: { userId_courseId: { userId, courseId } },
     create: { userId, courseId },
     update: {},
+  });
+  await logAudit({
+    userId: session.user.id,
+    userName: session.user.name ?? session.user.email ?? "Admin",
+    action: "CREATE",
+    entity: "Enrollment",
+    entityId: `${userId}_${courseId}`,
+    label: `Matriculou usuário ${userId} no curso ${courseId}`,
   });
 
   revalidatePath("/admin/cursos");

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { updateUser } from "./actions";
 
@@ -9,6 +10,8 @@ interface Props {
 
 export default async function EditarUsuarioPage({ params }: Props) {
   const { id } = await params;
+  const session = await auth();
+  const isSuperAdmin = session?.user?.role === "SUPERADMIN";
 
   const user = await db.user.findUnique({
     where: { id },
@@ -128,6 +131,7 @@ export default async function EditarUsuarioPage({ params }: Props) {
             <option value="MODERATOR">Moderador</option>
             <option value="COURSE_CREATOR">Criador de Cursos</option>
             <option value="ADMIN">Admin</option>
+            {isSuperAdmin && <option value="SUPERADMIN">Super Admin</option>}
           </select>
         </div>
 

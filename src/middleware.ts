@@ -16,7 +16,8 @@ export default auth((req) => {
 
   if (pathname.startsWith("/admin")) {
     if (!isLoggedIn) return Response.redirect(new URL("/login", req.url));
-    if (req.auth?.user?.role !== "ADMIN") return Response.redirect(new URL("/", req.url));
+    const role = req.auth?.user?.role;
+    if (role !== "ADMIN" && role !== "SUPERADMIN") return Response.redirect(new URL("/", req.url));
   }
 });
 
