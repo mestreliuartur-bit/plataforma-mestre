@@ -33,6 +33,12 @@ export default async function AdminUsuariosPage() {
           <h1 className="mt-1 font-serif text-3xl font-bold text-white">Usuários</h1>
           <p className="mt-1 text-sm text-gray-500">{total} usuário(s) cadastrado(s)</p>
         </div>
+        <Link
+          href="/admin/usuarios/novo"
+          className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 px-5 py-2.5 text-sm font-semibold text-black transition-all hover:shadow-lg hover:shadow-amber-900/30"
+        >
+          + Novo usuário
+        </Link>
       </div>
 
       {/* ── Stats ── */}
@@ -95,6 +101,10 @@ export default async function AdminUsuariosPage() {
                       <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${
                         user.role === "ADMIN"
                           ? "bg-amber-900/40 text-amber-400"
+                          : user.role === "MODERATOR"
+                          ? "bg-sky-900/40 text-sky-400"
+                          : user.role === "COURSE_CREATOR"
+                          ? "bg-purple-900/40 text-purple-400"
                           : "bg-gray-800 text-gray-400"
                       }`}>
                         {user.role}

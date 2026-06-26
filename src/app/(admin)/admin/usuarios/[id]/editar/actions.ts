@@ -10,7 +10,7 @@ export async function updateUser(userId: string, formData: FormData) {
   const email = formData.get("email") as string;
   const phone = (formData.get("phone") as string) || null;
   const birthDate = (formData.get("birthDate") as string) || null;
-  const role = formData.get("role") as "USER" | "ADMIN";
+  const role = formData.get("role") as "USER" | "MODERATOR" | "COURSE_CREATOR" | "ADMIN";
   const newPassword = (formData.get("newPassword") as string) || null;
 
   const data: Record<string, unknown> = {
