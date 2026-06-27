@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { db } from "@/lib/db";
 import { registerSchema } from "@/lib/validations/auth";
+import { logAudit } from "@/lib/audit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,6 +41,22 @@ export async function POST(req: NextRequest) {
         birthDate: new Date(birthDate),
       },
       select: { id: true, name: true, email: true, createdAt: true },
+    });
+
+    const ipAddress =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      req.headers.get("x-real-ip") ??
+      undefined;
+
+    await logAudit({
+      userId: user.id,
+      userName: user.name,
+      action: "CREATE",
+      entity: "User",
+      entityId: user.id,
+      label: `Usuário "${user.name}" se cadastrou (autocadastro)`,
+      ipAddress,
+      userAgent: req.headers.get("user-agent") ?? undefined,
     });
 
     return NextResponse.json(

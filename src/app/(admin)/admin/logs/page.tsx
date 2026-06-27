@@ -7,8 +7,8 @@ interface Props {
   searchParams: Promise<{ entity?: string; action?: string; userId?: string }>;
 }
 
-const ENTITIES = ["Course", "Module", "Lesson", "Event", "Banner", "CampaignPage", "User", "Enrollment"];
-const ACTIONS = ["CREATE", "UPDATE", "DELETE"];
+const ENTITIES = ["Auth", "Course", "Module", "Lesson", "Event", "Banner", "CampaignPage", "User", "Enrollment"];
+const ACTIONS = ["CREATE", "UPDATE", "DELETE", "LOGIN", "LOGIN_FAILED", "LOGOUT"];
 
 export default async function AdminLogsPage({ searchParams }: Props) {
   const session = await auth();
@@ -19,7 +19,7 @@ export default async function AdminLogsPage({ searchParams }: Props) {
   const logs = await db.auditLog.findMany({
     where: {
       ...(entity ? { entity } : {}),
-      ...(action ? { action: action as "CREATE" | "UPDATE" | "DELETE" } : {}),
+      ...(action ? { action: action as "CREATE" | "UPDATE" | "DELETE" | "LOGIN" | "LOGIN_FAILED" | "LOGOUT" } : {}),
       ...(userId ? { userId } : {}),
     },
     orderBy: { createdAt: "desc" },
@@ -53,7 +53,7 @@ export default async function AdminLogsPage({ searchParams }: Props) {
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest text-amber-400/60">Admin</p>
         <h1 className="mt-1 font-serif text-3xl font-bold text-white">Histórico de Atividades</h1>
-        <p className="mt-1 text-sm text-gray-500">Quem criou, editou ou removeu o quê — últimos {logs.length} registros</p>
+        <p className="mt-1 text-sm text-gray-500">Quem fez login, criou, editou ou removeu o quê — últimos {logs.length} registros</p>
       </div>
 
       {/* ── Filtros ── */}
@@ -136,6 +136,7 @@ export default async function AdminLogsPage({ searchParams }: Props) {
                   <th className="px-4 py-4 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-500">Ação</th>
                   <th className="px-4 py-4 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-500">Entidade</th>
                   <th className="px-6 py-4 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-500">Descrição</th>
+                  <th className="px-4 py-4 text-left text-[11px] font-semibold uppercase tracking-widest text-gray-500">IP</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
@@ -149,13 +150,20 @@ export default async function AdminLogsPage({ searchParams }: Props) {
                           ? "bg-emerald-900/40 text-emerald-400"
                           : log.action === "UPDATE"
                           ? "bg-sky-900/40 text-sky-400"
-                          : "bg-red-900/40 text-red-400"
+                          : log.action === "DELETE"
+                          ? "bg-red-900/40 text-red-400"
+                          : log.action === "LOGIN"
+                          ? "bg-green-900/40 text-green-400"
+                          : log.action === "LOGIN_FAILED"
+                          ? "bg-orange-900/40 text-orange-400"
+                          : "bg-gray-700/40 text-gray-300"
                       }`}>
                         {log.action}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-300">{log.entity}</td>
                     <td className="px-6 py-3 text-sm text-gray-300">{log.label}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-500">{log.ipAddress ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>

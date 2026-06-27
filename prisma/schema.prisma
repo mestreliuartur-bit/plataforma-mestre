@@ -86,19 +86,24 @@ enum AuditAction {
   CREATE
   UPDATE
   DELETE
+  LOGIN
+  LOGIN_FAILED
+  LOGOUT
 }
 
 model AuditLog {
   id        String      @id @default(cuid())
-  userId    String
+  userId    String?     // null em tentativas de login falhas (usuário pode não existir)
   userName  String   // denormalizado: preserva o nome mesmo se o usuário for removido depois
   action    AuditAction
-  entity    String      // "Course", "Module", "Lesson", "Event", "Banner", "CampaignPage", "User"
+  entity    String      // "Course", "Module", "Lesson", "Event", "Banner", "CampaignPage", "User", "Auth"
   entityId  String
   label     String      // descrição legível, ex: "Curso 'Tarot Iniciante'"
+  ipAddress String?
+  userAgent String?
   createdAt DateTime    @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([entity, entityId])
   @@index([userId])
